@@ -136,6 +136,12 @@ def compare_word(arr1, arr2):
         print(f'[Test]: FAIL iteration {index} mismatch Arr1 = 0x{arr1[index]:02x} Arr2 = 0x{arr2[index]:02x}')
 """
 
+def readAll(infile:str):
+    read_buf= []
+    with open(infile) as f:
+        read_buf = f.readlines()
+    return read_buf
+
 
 
 
