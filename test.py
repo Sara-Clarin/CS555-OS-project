@@ -7,10 +7,12 @@
                                                                  *
                Conforms to Appendix B— Cipher Example of FIPS-197*
 *****************************************************************"""
+import platform
 
 import aesencrypt
 import aesdecrypt
 import tools
+import unittest
 
 def inv_shift_rows_test():
     KAT = [0x00, 0x44, 0x88, 0xcc], [0x11, 0x55, 0x99, 0xdd], [0x22, 0x66, 0xaa, 0xee], [0x33, 0x77, 0xbb, 0xff]  #Test vector FIPS197
@@ -269,15 +271,14 @@ def test_aes():
     print()
 
 
-
 if __name__ == '__main__':
     print("---- AES Test Entry ----\r\n")
-
-    mix_cols_test()
-    inv_mix_cols_test()
-    sub_bytes_test()
-    key_expansion_test()
-    inv_shift_rows_test()
-    test_aes()
+    unittest.main()
+    # mix_cols_test()
+    # inv_mix_cols_test()
+    # sub_bytes_test()
+    # key_expansion_test()
+    # inv_shift_rows_test()
+    # test_aes()
 
 
