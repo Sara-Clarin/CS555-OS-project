@@ -16,6 +16,9 @@ def iso_iec_7816_4_pad(pt):
     length = len(ret_pt)
     padding = 16 - (length % 16)
 
+    if len(padding) %16 == 0: 
+        return ret_pt
+
     if padding != 0:
         #Short first plaintext block
         if length <= 15:
@@ -30,12 +33,16 @@ def iso_iec_7816_4_pad(pt):
                 ret_pt.append(0x00)
     return ret_pt
 
-# TODO: generate a series of random file with bytes increasing
+# TODO: Decouple file generation with timing + analysis
+
+#generate a series of random file with bytes increasing
 def GenFileSet():
     
-    smallest = 32 * (10**1) #16 megabyte file
-    largest  = 256 * (10*1) 
-    step     = 32 * (10**1)
+    smallest = 32 * (10**4) #16 megabyte file
+    largest  = 256 * (10*4) 
+    step     = 32 * (10**4)
+
+    # TODO: generate keys beforehand
 
     for i in range(smallest, largest, step):
         print("Testing {i} .......")
@@ -62,14 +69,6 @@ def GenFileSet():
 
     print(f'sequential time: {sequential_time}')
     print(f'File sizes: {file_sizes}')
-# Call aesencryption on a file
-# Time the operation and write to a file
-def Encrypt( file_p, fsize):
-
-    #open a file
-    #feed in using CORRECT FORMAT
-    #Print time values to the screen
-    pass
 
 # OPTIONAL: test that ciphertext matches plaintext
 # May delete, as correctness testing is largely done elsewhere

@@ -60,7 +60,6 @@ def xor_2d(arr1, arr2):
 
     return arr1
 
-
 """
 Function :   rot_word_L
 Parameters : word - current 32 bit unsigned word
@@ -92,7 +91,6 @@ def s_box_sub(state):
 
     return state
 
-
 """
 Function :   sub_word
 Parameters : (x1) 32-bit word
@@ -123,7 +121,6 @@ def shift_rows(state):
         state[i][1] = int(converter[1])
         state[i][2] = int(converter[2])
         state[i][3] = int(converter[3])
-
 
 """
 Function :   mix_cols
@@ -176,8 +173,6 @@ def mix_columns_transform(I_row, S_Col):
             temp ^= S_Col[i]
 
     return temp & 0xFF
-
-
 
 """
 Function :   key_expansion
@@ -294,7 +289,7 @@ def aes_encrypt(pt,key):
     curr_round = 0
 
     """generate key schedule for all 10 rounds"""
-    key_schedule = key_expansion(key)
+    #key_schedule = key_expansion(key)
 
     """for-loop to iterate over all 16-byte plaintext blocks"""
     for i in range(num_blocks):

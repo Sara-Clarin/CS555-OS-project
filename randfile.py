@@ -32,7 +32,7 @@ def make_choice( vector):
     elif vector == "4":
         return random.randint(0,30)
     elif vector == "2":
-        return random.randint(0,24)
+        return random.randint(0,23)
     else:
         return random.randint(0,1)
     
