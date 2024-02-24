@@ -5,6 +5,8 @@
 * Purpose    : This project is an implementation of the Advanced *
 *              Encryption Standard (AES) using a 128-bit key.    *
 *****************************************************************"""
+import tools
+import time
 
 s_box_inv = [[0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb],
             [0x7c, 0xe3, 0x39, 0x82, 0x9b, 0x2f, 0xff, 0x87, 0x34, 0x8e, 0x43, 0x44, 0xc4, 0xde, 0xe9, 0xcb],
@@ -23,7 +25,7 @@ s_box_inv = [[0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 
             [0xa0, 0xe0, 0x3b, 0x4d, 0xae, 0x2a, 0xf5, 0xb0, 0xc8, 0xeb, 0xbb, 0x3c, 0x83, 0x53, 0x99, 0x61],
             [0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d]]
 
-r_const = [0x01000000,0x02000000,0x04000000,0x08000000,0x10000000,0x20000000,0x40000000,0x80000000,0x1B000000,0x36000000]
+r_const = [0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000, 0x20000000, 0x40000000, 0x80000000, 0x1B000000, 0x36000000]
 
 s_box = [[0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76],
         [0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0],
@@ -47,28 +49,30 @@ inv_mix_col_matrix = [ [0x0E, 0x0B, 0x0D, 0x09],
                        [0x0D, 0x09, 0x0E, 0x0B],
                        [0x0B, 0x0D, 0x09, 0x0E] ]
 
-"""
-Function :   debug_print_plaintext_ascii
-Parameters : input - array of hexadecimal 
-Output :     None
-Description: Iterates through entire array, converts hexadecimal to ASCII, then prints to screen
-             Used in aes_dec_main and aestest.py main
-"""
+
 def debug_print_plaintext_ascii(input):
+    """
+    Function :   debug_print_plaintext_ascii
+    Parameters : input - array of hexadecimal
+    Output :     None
+    Description: Iterates through entire array, converts hexadecimal to ASCII, then prints to screen
+                 Used in aes_dec_main and aestest.py main
+    """
     for x in range(len(input)):
         print(f'{input[x]:c}', end='')
     print()
 
-"""
-Function :   xor_2d
-Parameters : arr1 - 2D hexadecimal array
-             arr2 - 2D hexadecimal array
-Output :     arr1 - 2D hexadecimal array that has been XOR'ed by arr2
-Description: Iterates through every element of both 2D arrays and XOR's arr1[row][col] ^ arr2[row][col].
-             arr1 used as storage and returned back to caller. 
-             Used in key addition
-"""
+
 def xor_2d(arr1, arr2):
+    """
+    Function :   xor_2d
+    Parameters : arr1 - 2D hexadecimal array
+                 arr2 - 2D hexadecimal array
+    Output :     arr1 - 2D hexadecimal array that has been XOR'ed by arr2
+    Description: Iterates through every element of both 2D arrays and XOR's arr1[row][col] ^ arr2[row][col].
+                 arr1 used as storage and returned back to caller.
+                 Used in key addition
+    """
     for i in range(len(arr1)):
         for j in range(len(arr1[0])):
             val = arr1[i][j] ^ arr2[i][j]
@@ -76,15 +80,16 @@ def xor_2d(arr1, arr2):
 
     return arr1
 
-"""
-Function :   rot_word_R
-Parameters : word - current 32 bit unsigned word
-             amt - requested rotate left amount
-Output :     32-bit unsigned word
-Description: Rotates a 32-bit word by requested amount using bit shifts, then returning new value back to caller
-             Needed for inverse Shift rows
-"""
+
 def rot_word_R(word, amt):
+    """
+    Function :   rot_word_R
+    Parameters : word - current 32 bit unsigned word
+                 amt - requested rotate left amount
+    Output :     32-bit unsigned word
+    Description: Rotates a 32-bit word by requested amount using bit shifts, then returning new value back to caller
+                 Needed for inverse Shift rows
+    """
     if amt == 1:
         return ((word >> 8) & 0x00FFFFFF) | ((word << 24) & 0xFF000000)
     elif amt == 2:
@@ -92,15 +97,16 @@ def rot_word_R(word, amt):
     elif amt == 3:
         return ((word >> 24) & 0x000000FF) | ((word << 8) & 0xFFFFFF00)
 
-"""
-Function :   rot_word_L
-Parameters : word - current 32 bit unsigned word
-             amt - requested rotate left amount
-Output :     32-bit unsigned word
-Description: Rotates a 32-bit word by requested amount using bit shifts, then returning new value back to caller
-             Needed for Key Expansion and Shift Rows
-"""
+
 def rot_word_L(word, amt):
+    """
+    Function :   rot_word_L
+    Parameters : word - current 32 bit unsigned word
+                 amt - requested rotate left amount
+    Output :     32-bit unsigned word
+    Description: Rotates a 32-bit word by requested amount using bit shifts, then returning new value back to caller
+                 Needed for Key Expansion and Shift Rows
+    """
     if amt == 1:
         return ((word << 8) & 0xFFFFFF00) | ((word >> 24) & 0x000000FF)
     elif amt == 2:
@@ -108,8 +114,8 @@ def rot_word_L(word, amt):
     elif amt == 3:
         return ((word << 24) & 0xFF000000) | ((word >> 8) & 0x00FFFFFF)
 
-def shift_rows_inv(state):
 
+def shift_rows_inv(state):
     for i in range(1,4,1):
         word = rot_word_R(state[i][0] << 24 | state[i][1] << 16 | state[i][2] << 8 | state[i][3], i)
         converter = word.to_bytes(4, byteorder='big', signed=False)
@@ -117,6 +123,8 @@ def shift_rows_inv(state):
         state[i][1] = int(converter[1])
         state[i][2] = int(converter[2])
         state[i][3] = int(converter[3])
+
+
 def inv_mix_cols(state):
     temp = [[0x00, 0x00, 0x00, 0x00],
             [0x00, 0x00, 0x00, 0x00],
@@ -130,57 +138,58 @@ def inv_mix_cols(state):
 
     return temp
 
+
 def inv_mix_columns_transform(I_row, S_Col):
-    arr = [0,0,0,0]
+    arr = [0, 0, 0, 0]
 
     for i in range(len(inv_mix_col_matrix[I_row])):
         element = inv_mix_col_matrix[I_row][i]
         temp = 0x00
 
-        #decimal value of 9: ((((x * 2) * 2) * 2) + x)
+        # decimal value of 9: ((((x * 2) * 2) * 2) + x)
         if element == 0x09:
-            #(x * 2)
+            # (x * 2)
             temp = S_Col[i] & 0xFF
             arr[i] = (S_Col[i] << 1)
             if temp >= 0x80: arr[i] ^= 0x1B
 
-            #((x * 2) * 2)
+            # ((x * 2) * 2)
             temp = arr[i] & 0xFF
             arr[i] = (arr[i] << 1)
             if temp >= 0x80: arr[i] ^= 0x1B
 
-            #(((x * 2) * 2) * 2)
+            # (((x * 2) * 2) * 2)
             temp = arr[i] & 0xFF
             arr[i] = (arr[i] << 1)
             if temp >= 0x80: arr[i] ^= 0x1B
 
-            #((((x * 2) * 2) * 2) + x)
+            # ((((x * 2) * 2) * 2) + x)
             arr[i] ^= S_Col[i]
 
-            #Clear MS bits and only keep a byte
+            # Clear MS bits and only keep a byte
             arr[i] = arr[i] & 0xFF
 
         # decimal value of 11: (((((x * 2) * 2) + x) * 2) + x)
         elif element == 0x0B:
-            #(x * 2)
+            # (x * 2)
             temp = S_Col[i]
             arr[i] = (S_Col[i] << 1)
             if temp >= 0x80: arr[i] ^= 0x1B
 
-            #((x * 2) * 2)
+            # ((x * 2) * 2)
             temp = arr[i] & 0xFF
             arr[i] = (arr[i] << 1)
             if temp >= 0x80: arr[i] ^= 0x1B
 
-            #(((x * 2) * 2) + x)
+            # (((x * 2) * 2) + x)
             arr[i] ^= S_Col[i]
 
-            #((((x * 2) * 2) + x) * 2)
+            # ((((x * 2) * 2) + x) * 2)
             temp = arr[i] & 0xFF
             arr[i] = (arr[i] << 1)
             if temp >= 0x80: arr[i] ^= 0x1B
 
-            #(((((x * 2) * 2) + x) * 2) + x)
+            # (((((x * 2) * 2) + x) * 2) + x)
             arr[i] ^= S_Col[i]
 
             # Clear MS bits and only keep a byte
@@ -188,25 +197,25 @@ def inv_mix_columns_transform(I_row, S_Col):
 
         # decimal value of 13: (((((x × 2) + x) × 2) × 2) + x)
         elif element == 0x0D:
-            #(x * 2)
+            # (x * 2)
             temp = S_Col[i]
             arr[i] = (S_Col[i] << 1)
             if temp >= 0x80: arr[i] ^= 0x1B
 
-            #(((x * 2) + x)
+            # (((x * 2) + x)
             arr[i] ^= S_Col[i]
 
-            #((((x * 2) + x) * 2)
+            # ((((x * 2) + x) * 2)
             temp = arr[i] & 0xFF
             arr[i] = (arr[i] << 1)
             if temp >= 0x80: arr[i] ^= 0x1B
 
-            #(((((x * 2) + x) * 2) * 2)
+            # (((((x * 2) + x) * 2) * 2)
             temp = arr[i] & 0xFF
             arr[i] = (arr[i] << 1)
             if temp >= 0x80: arr[i] ^= 0x1B
 
-            #(((((x * 2) + x) * 2) * 2) + x)
+            # (((((x * 2) + x) * 2) * 2) + x)
             arr[i] ^= S_Col[i]
 
             # Clear MS bits and only keep a byte
@@ -218,18 +227,18 @@ def inv_mix_columns_transform(I_row, S_Col):
             arr[i] ^= (S_Col[i] << 1)
             if (S_Col[i] & 0xFF) >= 0x80: arr[i] ^= 0x1B
 
-            #((x × 2) + x)
+            # ((x × 2) + x)
             arr[i] ^= S_Col[i]
 
-            #(((x × 2) + x) × 2)
+            #  (((x × 2) + x) × 2)
             temp = arr[i] & 0xFF
             arr[i] = (arr[i] << 1)
             if temp >= 0x80: arr[i] ^= 0x1B
 
-            #((((x × 2) + x) × 2) + x)
+            # ((((x × 2) + x) × 2) + x)
             arr[i] ^= S_Col[i]
 
-            #(((((x × 2) + x) × 2) + x) * 2)
+            # (((((x × 2) + x) × 2) + x) * 2)
             temp = arr[i] & 0xFF
             arr[i] = (arr[i] << 1)
             if temp >= 0x80: arr[i] ^= 0x1B
@@ -237,8 +246,9 @@ def inv_mix_columns_transform(I_row, S_Col):
             # Clear MS bits and only keep a byte
             arr[i] = arr[i] & 0xFF
 
-    #Add 1x4 * 4x1 into 1x1 and only keep a byte of data
+    # Add 1x4 * 4x1 into 1x1 and only keep a byte of data
     return (arr[0] ^ arr[1] ^ arr[2] ^ arr[3]) & 0xFF
+
 
 def s_box_inv_sub(state):
     for i, row in enumerate(state):
@@ -250,21 +260,23 @@ def s_box_inv_sub(state):
     return state
 
 
-"""
-Function :   sub_word
-Parameters : (x1) 32-bit word
-Output :     (x1) 32-bit word that has been substituted by S-Box
-Description: Perform S-Box substitution on (x1) 32-bit word
-"""
 def sub_word(input_word):
+    """
+    Function :   sub_word
+    Parameters : (x1) 32-bit word
+    Output :     (x1) 32-bit word that has been substituted by S-Box
+    Description: Perform S-Box substitution on (x1) 32-bit word
+    """
     byte_arr = input_word.to_bytes(4, 'big')
-    ret_word = [0,0,0,0]
+    ret_word = [0, 0, 0, 0]
     for i, byte in enumerate(byte_arr):
         ms_nibble = (byte & 0xF0) >> 4
         ls_nibble = (byte & 0x0F)
         ret_word[i] = s_box[ms_nibble][ls_nibble]
 
     return int.from_bytes(ret_word, 'big')
+
+
 def key_expansion(aes_key):
     """Since aes_key is a byte array, manually create 32-bit words"""
     w = [aes_key[0] << 24 | aes_key[1] << 16 | aes_key[2] << 8 | aes_key[3],
@@ -280,17 +292,17 @@ def key_expansion(aes_key):
         """If a words has been made - rotate, substitute, and use round constant for XOR"""
         if x % 4 == 0:
             temp = rot_word_L(temp, 1)
-            #print(f'[Debug] After RotWord(): 0x{temp:02x}')
+            # print(f'[Debug] After RotWord(): 0x{temp:02x}')
             temp = sub_word(temp)
-            #print(f'[Debug] After SubWord(): 0x{temp:02x}')
-            #print(f'[Debug] Rcon: 0x{r_const[r_const_ptr]:02x}')
+            # print(f'[Debug] After SubWord(): 0x{temp:02x}')
+            # print(f'[Debug] Rcon: 0x{r_const[r_const_ptr]:02x}')
             temp ^= r_const[r_const_ptr]
             r_const_ptr += 1
 
-            #print(f'[Debug] After XOR with Rcon: 0x{temp:02x}')
+            # print(f'[Debug] After XOR with Rcon: 0x{temp:02x}')
 
         temp ^= w[x - 4]
-        #print(f'[Debug] After XOR with w[i-Nk]: 0x{temp:02x}')
+        # print(f'[Debug] After XOR with w[i-Nk]: 0x{temp:02x}')
         w.append(temp)
 
     key_out = [
@@ -307,24 +319,25 @@ def key_expansion(aes_key):
         [0, 0, 0, 0]
     ]
 
-    """
-    Iterate through the key_out 2D array to store all 11 keys in this array, iterate 1 word at a time
-    Each row represents the round key for AES enc/dec
-    """
     for i in range(len(key_out)):
+        """
+        Iterate through the key_out 2D array to store all 11 keys in this array, iterate 1 word at a time
+        Each row represents the round key for AES enc/dec
+        """
         for j in range(len(key_out[0])):
             key_out[i][j] = w[i * len(key_out[0]) + j]
 
     return key_out
 
-"""
-Function :   extract_key
-Parameters : Key List
-Output :     Returns key from 1D space into 2D space 
-Description: Turn 1D byte array into 2D for easy XOR operations
-"""
+
 def extract_key(key):
-    byte_arr = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]
+    """
+    Function :   extract_key
+    Parameters : Key List
+    Output :     Returns key from 1D space into 2D space
+    Description: Turn 1D byte array into 2D for easy XOR operations
+    """
+    byte_arr = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
 
     for i in range(4):
         converter = key[i].to_bytes(4, byteorder='big', signed=False)
@@ -335,45 +348,50 @@ def extract_key(key):
 
     return byte_arr
 
-"""
-Function :   populate_state
-Parameters : empty state array, plaintext, current encryption round
-Output :     Returns state array with populated plaintext
-Description: Turn 1D byte array into 2D state array using respective indexing
-"""
+
 def populate_state(state, pt, curr_round):
+    """
+    Function :   populate_state
+    Parameters : empty state array, plaintext, current encryption round
+    Output :     Returns state array with populated plaintext
+    Description: Turn 1D byte array into 2D state array using respective indexing
+    """
     for col in range(len(state[0])):
         state[0][col] = pt[(col * 4) + (curr_round * 16)]
         state[1][col] = pt[(col * 4 + 1) + (curr_round * 16)]
         state[2][col] = pt[(col * 4 + 2) + (curr_round * 16)]
         state[3][col] = pt[(col * 4 + 3) + (curr_round * 16)]
 
-"""
-Function :   state_store
-Parameters : encrypted state array, ciphertext byte array
-Output :     Returns ciphertext byte array with 16 extra bytes
-Description: Used to correctly store bytes in order from AES state array
-             Loop through all column elements and store in 1d array using list comprehension
-Website:     https://www.w3schools.com/python/python_lists_comprehension.asp
-"""
+
 def state_store(state, ct):
+    """
+    Function :   state_store
+    Parameters : encrypted state array, ciphertext byte array
+    Output :     Returns ciphertext byte array with 16 extra bytes
+    Description: Used to correctly store bytes in order from AES state array
+                 Loop through all column elements and store in 1d array using list comprehension
+    Website:     https://www.w3schools.com/python/python_lists_comprehension.asp
+    """
     for j in range(len(state[0])):
         column = [row[j] for row in state]
         for elem in column:
             ct.append(elem)
-"""
-Function :   aes_decrypt
-Parameters : 1D ciphertext Byte array, 1D key array (16 bytes)
-Output :     1D plaintext array
-Description: AES-128 Decryption Algorithm
-"""
+
+
 def aes_decrypt(ct, key):
+    """
+    Function :   aes_decrypt
+    Parameters : 1D ciphertext Byte array, 1D key array (16 bytes)
+    Output :     1D plaintext array
+    Description: AES-128 Decryption Algorithm
+    """
     plaintext = bytearray([])
     num_blocks = int(len(ct) / 16)
     curr_round = 0
 
     """generate key schedule for all 10 rounds"""
-    key_schedule = key_expansion(key)
+    # key_schedule = key_expansion(key)
+    key_schedule = key
 
     """for-loop to iterate over all 16-byte plaintext blocks"""
     for i in range(num_blocks):
@@ -384,53 +402,53 @@ def aes_decrypt(ct, key):
 
         round_key = extract_key(key_schedule[10])
 
-        #print(f'[DECRYPT] round{0}: iinput')
-        #tools.debug_print_arr_2dhex_1line(state)
-        #print()
+        # print(f'[DECRYPT] round{0}: iinput')
+        # tools.debug_print_arr_2dhex_1line(state)
+        # print()
 
-        #print(f'[DECRYPT] round{0}: ik_sch')
-        #tools.debug_print_arr_2dhex_1line(round_key)
-        #print()
+        # print(f'[DECRYPT] round{0}: ik_sch')
+        # tools.debug_print_arr_2dhex_1line(round_key)
+        # print()
 
         state = xor_2d(state, round_key)
 
         """Perform necessary shifting, mixing, and substitution on 2D state array"""
         for inv_curr_round in range(9, -1, -1):
-            #print(f'[DECRYPT] round{10 - inv_curr_round}: istart')
-            #tools.debug_print_arr_2dhex_1line(state)
-            #print()
+            # print(f'[DECRYPT] round{10 - inv_curr_round}: istart')
+            # tools.debug_print_arr_2dhex_1line(state)
+            # print()
 
-            #print(f'[DECRYPT] round{10 - inv_curr_round}: is_row')
+            # print(f'[DECRYPT] round{10 - inv_curr_round}: is_row')
             shift_rows_inv(state)
-            #tools.debug_print_arr_2dhex_1line(state)
-            #print()
+            # tools.debug_print_arr_2dhex_1line(state)
+            # print()
 
-            #print(f'[DECRYPT] round{10 - inv_curr_round}: is_box')
+            # print(f'[DECRYPT] round{10 - inv_curr_round}: is_box')
             s_box_inv_sub(state)
-            #tools.debug_print_arr_2dhex_1line(state)
-            #print()
+            # tools.debug_print_arr_2dhex_1line(state)
+            # print()
 
             round_key = extract_key(key_schedule[inv_curr_round])
 
-            #print(f'[DECRYPT] round{10 - inv_curr_round}: ik_sch')
-            #tools.debug_print_arr_2dhex_1line(round_key)
-            #print()
+            # print(f'[DECRYPT] round{10 - inv_curr_round}: ik_sch')
+            # tools.debug_print_arr_2dhex_1line(round_key)
+            # print()
 
-            #print(f'[DECRYPT] round{10 - inv_curr_round}: ik_add')
+            # print(f'[DECRYPT] round{10 - inv_curr_round}: ik_add')
             state = xor_2d(state, round_key)
-            #tools.debug_print_arr_2dhex_1line(state)
-            #print()
+            # tools.debug_print_arr_2dhex_1line(state)
+            # print()
 
             """Mix Columns skipped for last round"""
             if inv_curr_round != 0:
-                #print(f'[DECRYPT] round{10 - inv_curr_round}: i_mix_cols')
+                # print(f'[DECRYPT] round{10 - inv_curr_round}: i_mix_cols')
                 state = inv_mix_cols(state)
-                #tools.debug_print_arr_2dhex_1line(state)
-                #print()
+                # tools.debug_print_arr_2dhex_1line(state)
+                # print()
 
-        #print(f'AES Decrypt Complete')
-        #tools.debug_print_arr_2dhex_1line(state)
-        #print()
+        # print(f'AES Decrypt Complete')
+        # tools.debug_print_arr_2dhex_1line(state)
+        # print()
 
         """Store 16 extra bytes into ciphertext"""
         state_store(state, plaintext)
@@ -440,14 +458,15 @@ def aes_decrypt(ct, key):
 
     return plaintext
 
-"""
-Function :   iso_iec_7816_4_unpad
-Parameters : 1D padded plaintext array
-Output :     1D unpadded plaintext array
-Description: Undo padding scheme from aestest.iso_iec_7816_4_pad()
-             Iterate from the back of the byte array, mark 0x80 instance, then return spliced array
-"""
+
 def iso_iec_7816_4_unpad(pt):
+    """
+    Function :   iso_iec_7816_4_unpad
+    Parameters : 1D padded plaintext array
+    Output :     1D unpadded plaintext array
+    Description: Undo padding scheme from aestest.iso_iec_7816_4_pad()
+                 Iterate from the back of the byte array, mark 0x80 instance, then return spliced array
+    """
     ret_pt = bytearray(pt)
     found = 0
     for i in range(len(ret_pt) -1, 0, -1):
@@ -459,17 +478,55 @@ def iso_iec_7816_4_unpad(pt):
 
     return ret_pt
 
-"""
-Function :   main
-Parameters : 1D ciphertext Byte array, 1D key array (16 bytes)
-Output :     None
-Description: AES Decrypt driver - must be called from aesencrypt.py
-"""
-def aes_dec_main(ct, key):
 
+def aes_dec_main(ct, key):
+    """
+    Function :   main
+    Parameters : 1D ciphertext Byte array, 1D key array (16 bytes)
+    Output :     None
+    Description: AES Decrypt driver - must be called from aesencrypt.py
+    """
     plaintext = aes_decrypt(ct, key)
 
     unpaddedPT = iso_iec_7816_4_unpad(plaintext)
 
     print('[aesdecrypt.py] Plaintext (ASCII):')
     debug_print_plaintext_ascii(unpaddedPT)
+
+
+def AES_Decrypt(args, key):
+    """
+    Function :   AES_Decrypt
+    Parameters : program arguments, key schedule array
+    Output :     None
+    Description: Perform Non-Parallelized AES Decryption
+    """
+    print("[INFO]: Non-Parallelized Decryption")
+    plaintext = b''
+    with open(args.infile, 'rb') as infile:
+        data = infile.read()
+
+        num_blocks = int(len(data)/16)
+
+        start = time.time_ns()
+        for x in range(num_blocks):
+            block = data[x*16: (x*16)+16]
+            plaintext += (aes_decrypt(block, key))
+            print(f'[INFO]: Blocks remaining: {num_blocks - x}')
+        end = time.time_ns()
+        print(f'[INFO]: Non-Parallelized AES Encryption took {(end - start) / 1e9} s')
+
+        unpadded = tools.iso_iec_7816_4_unpad(plaintext)
+
+    with open(args.outfile, 'wb') as outfile:
+        outfile.write(unpadded)
+
+
+def AES_Decrypt_Parallelized(args, key):
+    """
+    Function :   AES_Decrypt_Parallelized
+    Parameters : program arguments, key schedule array
+    Output :     None
+    Description: Perform Parallelized AES Decryption
+    """
+    print("[INFO]: Parallelized Decryption")
