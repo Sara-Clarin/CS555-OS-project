@@ -290,7 +290,8 @@ def aes_encrypt(pt,key):
 
     """generate key schedule for all 10 rounds"""
     #key_schedule = key_expansion(key)
-
+    key_schedule = key
+    
     """for-loop to iterate over all 16-byte plaintext blocks"""
     for i in range(num_blocks):
         state = [[0x00, 0x00, 0x00, 0x00], [0x00, 0x00, 0x00, 0x00], [0x00, 0x00, 0x00, 0x00], [0x00, 0x00, 0x00, 0x00]]

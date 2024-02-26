@@ -96,7 +96,7 @@ def choose_words( eights, fours, twos, ones,nbytes, new_file):
             new_file.write(f'{word}')
         else:
             diff = nbytes - (total_chars - len(word)) #how many left to write
-            print(f'Diff is: {diff}')
+            #print(f'Diff is: {diff}')
             if diff > 0:                    # add small number of bytes
                 write_diff(new_file, diff)
                 break
@@ -192,7 +192,7 @@ def generate_new_file( nbytes, to_stdout):
     if not to_stdout:
         print(f"Generating random text file of length {nbytes} bytes\n")
 
-        new_file = open(f'{nbytes}.txt', "w+")
+        new_file = open(f'eval_files/{nbytes}.txt', "w+")
 
     num_eightbs = nbytes  // 8
     remainder = nbytes - (num_eightbs * 8)

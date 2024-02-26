@@ -2,9 +2,12 @@ import aesencrypt
 import os
 import aesdecrypt
 import time
+import argparse
+import tools
 
 import matplotlib.pyplot as plt
 from subprocess import check_output
+import subprocess
 
 file_sizes = []
 sequential_time = []
@@ -37,43 +40,69 @@ def iso_iec_7816_4_pad(pt):
 
 #generate a series of random file with bytes increasing
 def GenFileSet():
-    
-    smallest = 32 * (10**4) #16 megabyte file
-    largest  = 256 * (10*4) 
-    step     = 32 * (10**4)
 
-    # TODO: generate keys beforehand
+    print("Generating test files....")
+    # Could move these to globals if need be
+    fsize = 32 * (10**1) #16 megabyte file
+    step   = 32* (10**1)
 
-    for i in range(smallest, largest, step):
-        print("Testing {i} .......")
+    for i in range(8):
+        print(f"Creating file of size {fsize} .......")
 
-        plaintext_string = check_output(["python3", "randfile.py", f'{i}'])
+        subprocess.run(["python3", "randfile.py", f'{fsize}', '--to_stdout', '0'])
+        fsize += step
 
-        #file_sizes.append( i // (10**6))   # file sizes in megabytes
-        file_sizes.append(i)
-        key = os.urandom(16)
+def Run_Enc_Analysis( ):
 
-        #TODO: adapt once the padding function is moved into aesencrypt
-        start = time.time()
-        padded_plaintext = iso_iec_7816_4_pad(plaintext_string)
+    # TODO: generate keys beforehand and extract them
 
-        # Sequential AES
-        aesencrypt.aes_encrypt(padded_plaintext,key)
-        sequential_time.append(time.time() - start)
+    fsize = 32 * (10**1) #16 megabyte file
+    step  = 32* (10**1)
 
-        #TODO: insert parallel AES
-        # start = time.time()
+    for i in range(8):
+        print(f"Testing {fsize} .......")
+
+        k = os.urandom(16)   # TODO: fix this
+        key = tools.key_expansion(k)
+
+        #plaintext_string = check_output(["python3", "randfile.py", f'{i}'])
+        infile = open(f'eval_files/{fsize}.txt')
+
+        data = infile.read()
+
+        # ##############
+        # SEQUENTIAL AES
+        ###################
+        if len(data) % 16 != 0:
+            padded = tools.iso_iec_7816_4_pad(data)
+            num_blocks = int(len(padded)/16)
+        else:
+            num_blocks = int(len(data)/16)
+            padded = data
+
+        start = time.time_ns()
+        for x in range(num_blocks):
+            block = padded[x*16: (x*16)+16]
+            aesencrypt.aes_encrypt(block, key)   # do not store ciphertext for speed
+            print(f'[INFO]: Blocks remaining: {num_blocks - x}')
+            
+        file_sizes.append(fsize)
+
+
+        sequential_time.append(time.time_ns() - start)
+
+        ###############
+        #TODO: PARALLEL AES
+        ####################
+        # start = time.time_ns()
         # call to aes_parallel
-        #parallel_time.append( time.time() - start)
+        #parallel_time.append( time.time_ns() - start)
         parallel_time.append(0)
+
+        fsize += step
 
     print(f'sequential time: {sequential_time}')
     print(f'File sizes: {file_sizes}')
-
-# OPTIONAL: test that ciphertext matches plaintext
-# May delete, as correctness testing is largely done elsewhere
-def SanityCheck():
-    pass
 
 # create a bar chart
 # If this doesn't work, then a CSV 
@@ -94,7 +123,15 @@ def Plot_line():
     pass
 
 def main():
-    GenFileSet()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--gen", help="Generate new file set", type=int)
+    args = parser.parse_args()
+
+    if args.gen:
+        GenFileSet()
+        exit(0)
+    Run_Enc_Analysis()
     Plot_bar(file_sizes, sequential_time, parallel_time)
     #Plot(file_sizes, parallel_time)
 
