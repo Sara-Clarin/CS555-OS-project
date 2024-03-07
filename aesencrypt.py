@@ -8,6 +8,7 @@
 import aesdecrypt
 import tools
 import time
+from multiprocessing import Pool, TimeoutError
 
 mix_col_matrix = [[0x02, 0x03, 0x01, 0x01],
                    [0x01, 0x02, 0x03, 0x01],
@@ -421,6 +422,16 @@ def AES_Encrypt_Parallelized(args, key):
     Description: Perform Parallelized AES Encryption
     """
     print("[INFO]: Parallelized Encryption")
+    ciphertext = b''
+    with open(args.infile, 'rb') as infile:
+        data = infile.read()
+
+        if len(data) % 16 != 0:
+            padded = tools.iso_iec_7816_4_pad(data)
+            num_blocks = int(len(padded)/16)
+        else:
+            num_blocks = int(len(data)/16)
+            padded = data
 
 
 

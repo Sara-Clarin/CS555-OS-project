@@ -1,4 +1,9 @@
 # Constants
+import os
+import platform
+import re
+import subprocess
+
 import aesencrypt
 
 PT_BLOCK_SIZE = 16
@@ -322,3 +327,26 @@ def iso_iec_7816_4_unpad(pt):
         return ret_pt
     else:
         return pt[:found]
+
+
+def get_processor_name():
+    """
+    Function :   get_processor_name
+    Parameters : None
+    Description: Get processor information - From stackoverflow
+                 https://stackoverflow.com/questions/4842448/getting-processor-information-in-python
+    :return: String with processor information
+    """
+    if platform.system() == "Windows":
+        return platform.processor()
+    elif platform.system() == "Darwin":
+        os.environ['PATH'] = os.environ['PATH'] + os.pathsep + '/usr/sbin'
+        command = "sysctl -n machdep.cpu.brand_string"
+        return subprocess.check_output(command).strip()
+    elif platform.system() == "Linux":
+        command = "cat /proc/cpuinfo"
+        all_info = subprocess.check_output(command, shell=True).decode().strip()
+        for line in all_info.split("\n"):
+            if "model name" in line:
+                return re.sub(".*model name.*:", "", line,1)
+    return ""

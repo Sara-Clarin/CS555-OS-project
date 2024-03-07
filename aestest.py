@@ -9,6 +9,7 @@ import aesencrypt
 import aesdecrypt
 import argparse
 import os
+import platform
 import tools
 import sys
 
@@ -17,6 +18,9 @@ if __name__ == '__main__':
 	print("------------------------------------")
 	print("CSCI-555L AES-128 ECB Implementation")
 	print("------------------------------------")
+	print(f'[Processor Info]: {tools.get_processor_name()}\r')
+	print(f'[OS]: {platform.system()}\r')
+	print(f'[Cores]: {os.cpu_count()}\r')
 
 	parser = argparse.ArgumentParser(prog='aestest.py', description='Perform AES-128 ECB Encryption / Decryption')
 	parser.add_argument('-p', action='store_true', help='[Optional] Enable parallelization flag')
