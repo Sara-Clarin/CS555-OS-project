@@ -185,9 +185,6 @@ def mix_columns_transform(I_row, S_Col):
 
     return temp & 0xFF
 
-
-
-
 def key_expansion(aes_key):
     """
     Function :   key_expansion

@@ -3,7 +3,6 @@ import os
 import platform
 import re
 import subprocess
-
 import aesencrypt
 
 PT_BLOCK_SIZE = 16
@@ -150,7 +149,6 @@ def read_bytes(infile: str, num_bytes: int):
     with open(infile, 'rb') as f:
         data = f.read(num_bytes)
         return data
-
 
 def read_file(path):
     """
@@ -327,7 +325,6 @@ def iso_iec_7816_4_unpad(pt):
         return ret_pt
     else:
         return pt[:found]
-
 
 def get_processor_name():
     """
