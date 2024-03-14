@@ -376,8 +376,6 @@ def aes_encrypt_single_block(pt, key):
     curr_round = 0
 
     print(f"PID: {os.getpid()} Started")
-
-    """generate key schedule for all 10 rounds"""
     key_schedule = key
 
     """for-loop to iterate over all 16-byte plaintext blocks"""
@@ -512,7 +510,7 @@ def AES_Encrypt_Parallelized(args, key):
                 if i % 10000 == 0:
                     print(f'[INFO {(time.time_ns() - start) / 1e9} s]: Processing Block {i} of {num_blocks} \r')
                 futures.append(executor.submit(aes_encrypt_single_block, padded[i*16:(i+1)*16], key))
-                #executor.submit(aes_encrypt_single_block, padded[i * 16:(i + 1) * 16], key)
+                # executor.submit(aes_encrypt_single_block, padded[i * 16:(i + 1) * 16], key)
 
             # Collect and sort the encrypted blocks based on their original order
             for future in futures:
