@@ -460,6 +460,7 @@ def aes_decrypt(ct, key):
 
     return plaintext
 
+
 def aes_decrypt_single_block(ct, key):
     """
     Function :   aes_decrypt
@@ -468,10 +469,10 @@ def aes_decrypt_single_block(ct, key):
     Description: AES-128 Decryption Algorithm
     """
     plaintext = bytearray([])
-    num_blocks = int(len(ct) / 16)
     curr_round = 0
 
-    print(f"PID: {os.getpid()} Started")
+    """generate key schedule for all 10 rounds"""
+    # key_schedule = key_expansion(key)
     key_schedule = key
 
     """for-loop to iterate over all 16-byte plaintext blocks"""
@@ -526,17 +527,13 @@ def aes_decrypt_single_block(ct, key):
             # tools.debug_print_arr_2dhex_1line(state)
             # print()
 
-        # print(f'AES Decrypt Complete')
-        # tools.debug_print_arr_2dhex_1line(state)
-        # print()
+    # print(f'AES Decrypt Complete')
+    # tools.debug_print_arr_2dhex_1line(state)
+    # print()
 
-        """Store 16 extra bytes into ciphertext"""
-        state_store(state, plaintext)
+    """Store 16 extra bytes into ciphertext"""
+    state_store(state, plaintext)
 
-        """Update current cipher round for indexing"""
-        curr_round += 1
-
-    print(f"PID: {os.getpid()} Ended\r")
     return plaintext
 
 
@@ -626,22 +623,24 @@ def AES_Decrypt_Parallelized(args, key):
 
         start = time.time_ns()
         # map(): Apply a function to an iterable of elements.
-        with ProcessPoolExecutor(max_workers=12) as executor:
+        with ProcessPoolExecutor(max_workers=8) as executor:
             # Schedule each block for encryption with an index
             for i in range(num_blocks):
                 if i % 10000 == 0:
                     print(f'[INFO {(time.time_ns() - start) / 1e9} s]: Processing Block {i} of {num_blocks} \r')
                 futures.append(executor.submit(aes_decrypt_single_block, padded[i*16:(i+1)*16], key))
                 # executor.submit(aes_encrypt_single_block, padded[i * 16:(i + 1) * 16], key)
+            print("Scheduling Jobs...")
 
-            # Collect and sort the encrypted blocks based on their original order
-            for future in futures:
-                decrypted_blocks.append(future.result())
+        # Collect and sort the encrypted blocks based on their original order
+        for future in futures:
+            decrypted_blocks.append(future.result())
 
         # Concatenate the encrypted blocks in the original order
         plaintext = b''.join(decrypted_blocks)
         end = time.time_ns()
 
-        print(f'[INFO]: Non-Parallelized AES decryption took {(end - start) / 1e9} s')
+        print(f'[INFO]: Parallelized AES decryption took {(end - start) / 1e9} s')
         with open(args.outfile, 'wb') as outfile:
             outfile.write(plaintext)
+
