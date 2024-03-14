@@ -1,5 +1,6 @@
 import random
 import argparse
+import platform
 
 '''
 * Test script for AES encryption project for CS555L
@@ -192,7 +193,10 @@ def generate_new_file( nbytes, to_stdout):
     if not to_stdout:
         print(f"Generating random text file of length {nbytes} bytes\n")
 
-        new_file = open(f'eval_files/{nbytes}.txt', "w+")
+        if "Win" in platform.system():
+            new_file = open(f'eval_files\\{nbytes}.txt', "w+")
+        if "Darwin" in platform.system():
+            new_file = open(f'eval_files/{nbytes}.txt', "w+")
 
     num_eightbs = nbytes  // 8
     remainder = nbytes - (num_eightbs * 8)
