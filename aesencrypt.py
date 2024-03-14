@@ -504,7 +504,7 @@ def AES_Encrypt_Parallelized(args, key):
 
         start = time.time_ns()
         # map(): Apply a function to an iterable of elements.
-        with ProcessPoolExecutor(max_workers=12) as executor:
+        with ProcessPoolExecutor(max_workers=8) as executor:
             # Schedule each block for encryption with an index
             for i in range(num_blocks):
                 if i % 10000 == 0:
