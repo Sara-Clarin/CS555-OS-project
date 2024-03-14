@@ -425,7 +425,7 @@ def aes_encrypt_single_block(pt, key):
     state_store(state, ciphertext)
 
     """Update current cipher round for indexing"""
-    curr_round += 1
+    #curr_round += 1
 
     print(f"PID: {os.getpid()} Ended\r")
     return ciphertext
@@ -511,10 +511,12 @@ def AES_Encrypt_Parallelized(args, key):
                     print(f'[INFO {(time.time_ns() - start) / 1e9} s]: Processing Block {i} of {num_blocks} \r')
                 futures.append(executor.submit(aes_encrypt_single_block, padded[i*16:(i+1)*16], key))
                 # executor.submit(aes_encrypt_single_block, padded[i * 16:(i + 1) * 16], key)
+            print("Scheduling Jobs...")
 
-            # Collect and sort the encrypted blocks based on their original order
-            for future in futures:
-                encrypted_blocks.append(future.result())
+        # Collect and sort the encrypted blocks based on their original order
+        print("Collecting futures")
+        for future in futures:
+            encrypted_blocks.append(future.result())
 
         # Concatenate the encrypted blocks in the original order
         ciphertext = b''.join(encrypted_blocks)
