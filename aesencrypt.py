@@ -6,6 +6,7 @@
 *              Encryption Standard (AES) using a 128-bit key.    *
 *****************************************************************"""
 import concurrent
+import os
 from concurrent.futures import ProcessPoolExecutor
 
 import aesdecrypt
@@ -374,6 +375,8 @@ def aes_encrypt_single_block(pt, key):
     ciphertext = bytearray([])
     curr_round = 0
 
+    print(f"PID: {os.getpid()} Started")
+
     """generate key schedule for all 10 rounds"""
     key_schedule = key
 
@@ -426,6 +429,7 @@ def aes_encrypt_single_block(pt, key):
     """Update current cipher round for indexing"""
     curr_round += 1
 
+    print(f"PID: {os.getpid()} Ended\r")
     return ciphertext
 
 
@@ -488,6 +492,8 @@ def AES_Encrypt_Parallelized(args, key):
     """
     print("[INFO]: Parallelized Encryption")
     ciphertext = b''
+    encrypted_blocks = []
+    futures = []
     with open(args.infile, 'rb') as infile:
         data = infile.read()
 
@@ -500,18 +506,23 @@ def AES_Encrypt_Parallelized(args, key):
 
         start = time.time_ns()
         # map(): Apply a function to an iterable of elements.
-        with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
+        with ProcessPoolExecutor(max_workers=12) as executor:
             # Schedule each block for encryption with an index
-            futures = [executor.submit(aes_encrypt_single_block, padded[i*16:(i+1)*16], key) for i in range(num_blocks)]
+            for i in range(num_blocks):
+                if i % 10000 == 0:
+                    print(f'[INFO {(time.time_ns() - start) / 1e9} s]: Processing Block {i} of {num_blocks} \r')
+                futures.append(executor.submit(aes_encrypt_single_block, padded[i*16:(i+1)*16], key))
+                #executor.submit(aes_encrypt_single_block, padded[i * 16:(i + 1) * 16], key)
 
             # Collect and sort the encrypted blocks based on their original order
-            encrypted_blocks = [future.result() for future in concurrent.futures.as_completed(futures)]
+            for future in futures:
+                encrypted_blocks.append(future.result())
 
         # Concatenate the encrypted blocks in the original order
         ciphertext = b''.join(encrypted_blocks)
         end = time.time_ns()
 
-        print(f'[INFO]: Parallelized AES Encryption took {(end - start)} ns')
+        print(f'[INFO]: Non-Parallelized AES Encryption took {(end - start) / 1e9} s')
         with open(args.outfile, 'wb') as outfile:
             outfile.write(ciphertext)
 
