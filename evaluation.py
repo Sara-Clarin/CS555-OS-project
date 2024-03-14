@@ -1,3 +1,5 @@
+import platform
+
 import aesencrypt
 import os
 import aesdecrypt
@@ -66,7 +68,12 @@ def Run_Enc_Analysis( ):
         key = tools.key_expansion(k)
 
         #plaintext_string = check_output(["python3", "randfile.py", f'{i}'])
-        infile = open(f'eval_files/{fsize}.txt', 'rb')
+        if "Win" in platform.system():
+            infile = open(f'eval_files\\{fsize}.txt', 'rb')
+        if "Darwin" in platform.system():
+            infile = open(f'eval_files/{fsize}.txt', 'rb')
+        else:
+            infile = open(f'eval_files/{fsize}')
 
         data = infile.read()
 
