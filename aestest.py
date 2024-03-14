@@ -54,12 +54,12 @@ if __name__ == '__main__':
 	key = tools.key_expansion(key)
 	tools.debug_print_arr_2dhex(key)
 
+	# TODO : All AES Encrypt/Decrypt should return back times
+	# TODO : Merge @sara's evaluation code to wrap time calculation
 	if args.p:
 		if args.encrypt:
-			# TODO AES-128 ECB Parallelized Encrypt
 			aesencrypt.AES_Encrypt_Parallelized(args, key)
 		else:
-			# TODO AES-128 ECB Parallelized Decrypt
 			aesdecrypt.AES_Decrypt_Parallelized(args, key)
 	else:
 		if args.encrypt:
