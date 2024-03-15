@@ -633,28 +633,13 @@ def AES_Decrypt_Parallelized(args, key):
             parts.append(padded[i:i + part_size])
 
         start = time.time_ns()
-        # map(): Apply a function to an iterable of elements.
+
         with ProcessPoolExecutor(max_workers=max_workers) as executor:
-            # Schedule each block for encryption with an index
-            for i in range(len(parts)):
-                futures.append(executor.submit(aes_decrypt, parts[i], key))
+            futures.extend(executor.submit(aes_decrypt, part, key) for part in parts)
 
             for future in futures:
                 decrypted_blocks.append(future.result())
-        """
-        with ProcessPoolExecutor(max_workers=8) as executor:
-            # Schedule each block for encryption with an index
-            for i in range(num_blocks):
-                if i % 10000 == 0:
-                    print(f'[INFO {(time.time_ns() - start) / 1e9} s]: Processing Block {i} of {num_blocks} \r')
-                futures.append(executor.submit(aes_decrypt_single_block, padded[i*16:(i+1)*16], key))
-                # executor.submit(aes_encrypt_single_block, padded[i * 16:(i + 1) * 16], key)
-            print("Scheduling Jobs...")
 
-        # Collect and sort the encrypted blocks based on their original order
-        for future in futures:
-            decrypted_blocks.append(future.result())
-        """
         # Concatenate the encrypted blocks in the original order
         plaintext = b''.join(decrypted_blocks)
         end = time.time_ns()
