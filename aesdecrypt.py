@@ -397,6 +397,8 @@ def aes_decrypt(ct, key):
 
     """for-loop to iterate over all 16-byte plaintext blocks"""
     for i in range(num_blocks):
+        if i % 100000 == 0:
+            print(f"PID: {os.getpid()} Processed {i} out of {num_blocks} blocks")
         state = [[0x00, 0x00, 0x00, 0x00], [0x00, 0x00, 0x00, 0x00], [0x00, 0x00, 0x00, 0x00], [0x00, 0x00, 0x00, 0x00]]
 
         """This function will turn the 1D plaintext into multiple 2D state arrays"""
@@ -623,6 +625,23 @@ def AES_Decrypt_Parallelized(args, key):
 
         start = time.time_ns()
         # map(): Apply a function to an iterable of elements.
+        parts = []
+        max_workers = 8
+        # Loop to create parts
+        part_size = len(padded) // max_workers
+        for i in range(0, len(padded), part_size):
+            parts.append(padded[i:i + part_size])
+
+        start = time.time_ns()
+        # map(): Apply a function to an iterable of elements.
+        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+            # Schedule each block for encryption with an index
+            for i in range(len(parts)):
+                futures.append(executor.submit(aes_decrypt, parts[i], key))
+
+            for future in futures:
+                decrypted_blocks.append(future.result())
+        """
         with ProcessPoolExecutor(max_workers=8) as executor:
             # Schedule each block for encryption with an index
             for i in range(num_blocks):
@@ -635,7 +654,7 @@ def AES_Decrypt_Parallelized(args, key):
         # Collect and sort the encrypted blocks based on their original order
         for future in futures:
             decrypted_blocks.append(future.result())
-
+        """
         # Concatenate the encrypted blocks in the original order
         plaintext = b''.join(decrypted_blocks)
         end = time.time_ns()
