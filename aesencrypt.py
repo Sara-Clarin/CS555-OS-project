@@ -515,9 +515,10 @@ def AES_Encrypt_Parallelized(args, key):
         # map(): Apply a function to an iterable of elements.
         with ProcessPoolExecutor(max_workers=max_workers) as executor:
             # Schedule each block for encryption with an index
-            for i in range(len(parts)):
-                futures.append(executor.submit(aes_encrypt, parts[i], key))
-
+            #for i in range(len(parts)):
+                #futures.append(executor.submit(aes_encrypt, parts[i], key))
+            
+            futures.append(executor.submit(aes_encrypt, [parts[i] for i in range(len(parts))], key))
             for future in futures:
                 encrypted_blocks.append(future.result())
             """
@@ -533,7 +534,7 @@ def AES_Encrypt_Parallelized(args, key):
         ciphertext = b''.join(encrypted_blocks)
         end = time.time_ns()
 
-        print(f'[INFO]: Non-Parallelized AES Encryption took {(end - start) / 1e9} s')
+        print(f'[INFO]: Parallelized AES Encryption took {(end - start) / 1e9} s')
         with open(args.outfile, 'wb') as outfile:
             outfile.write(ciphertext)
 
