@@ -514,22 +514,11 @@ def AES_Encrypt_Parallelized(args, key):
         start = time.time_ns()
         # map(): Apply a function to an iterable of elements.
         with ProcessPoolExecutor(max_workers=max_workers) as executor:
-            # Schedule each block for encryption with an index
-            #for i in range(len(parts)):
-                #futures.append(executor.submit(aes_encrypt, parts[i], key))
-            
-            futures.append(executor.submit(aes_encrypt, [parts[i] for i in range(len(parts))], key))
+            futures.extend(executor.submit(aes_encrypt, part, key) for part in parts)
+
             for future in futures:
                 encrypted_blocks.append(future.result())
-            """
-            for i in range(num_blocks):
-                if i % 10000 == 0:
-                    print(f'[INFO {(time.time_ns() - start) / 1e9} s]: Processing Block {i} of {num_blocks} \r')
-                futures.append(executor.submit(aes_encrypt_single_block, padded[i*16:(i+1)*16], key))
-                # executor.submit(aes_encrypt_single_block, padded[i * 16:(i + 1) * 16], key)
-            
-            print("Scheduling Jobs...")
-            """
+
         # Concatenate the encrypted blocks in the original order
         ciphertext = b''.join(encrypted_blocks)
         end = time.time_ns()
