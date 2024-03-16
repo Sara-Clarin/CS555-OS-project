@@ -508,8 +508,19 @@ def AES_Encrypt_Parallelized(args, key):
         max_workers = 8
         # Loop to create parts
         part_size = len(padded) // max_workers
+        final_index = 0
+
         for i in range(0, len(padded), part_size):
             parts.append(padded[i:i + part_size])
+            final_index = i
+
+        bytes_remaining = len(padded) - (part_size * max_workers)
+        #remainder = padded[-bytes_remaining : -1]
+
+        # TODO: fix truncation here
+        #print(f'remainder: {remainder}')
+        #print(f'final index: {padded[final_index]}')
+        print(f'Final_index: {final_index}, len(padded) {len(padded)}')
 
         start = time.time_ns()
         # map(): Apply a function to an iterable of elements.
@@ -526,30 +537,3 @@ def AES_Encrypt_Parallelized(args, key):
         print(f'[INFO]: Parallelized AES Encryption took {(end - start) / 1e9} s')
         with open(args.outfile, 'wb') as outfile:
             outfile.write(ciphertext)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
