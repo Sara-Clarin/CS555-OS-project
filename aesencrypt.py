@@ -13,6 +13,7 @@ import aesdecrypt
 import tools
 import time
 from multiprocessing import Pool, TimeoutError
+import math
 
 mix_col_matrix = [[0x02, 0x03, 0x01, 0x01],
                    [0x01, 0x02, 0x03, 0x01],
@@ -307,14 +308,17 @@ def aes_encrypt(pt, key):
     num_blocks = int(len(pt) / 16)
     curr_round = 0
 
+    if len(pt) % 16 != 0:
+        print("Whoopsie! PT not divisible by 16")
+        print(f'Remainder: {len(pt) % 16}')
     """generate key schedule for all 10 rounds"""
     # key_schedule = key_expansion(key)
     key_schedule = key
 
     """for-loop to iterate over all 16-byte plaintext blocks"""
     for i in range(num_blocks):
-        if i % 100000 == 0:
-            print(f"PID: {os.getpid()} Processed {i} out of {num_blocks} blocks")
+        #if i % 100000 == 0:
+            #print(f"PID: {os.getpid()} Processed {i} out of {num_blocks} blocks")
         state = [[0x00, 0x00, 0x00, 0x00], [0x00, 0x00, 0x00, 0x00], [0x00, 0x00, 0x00, 0x00], [0x00, 0x00, 0x00, 0x00]]
 
         """This function will turn the 1D plaintext into multiple 2D state arrays"""
@@ -377,7 +381,7 @@ def aes_encrypt_single_block(pt, key):
     ciphertext = bytearray([])
     curr_round = 0
 
-    print(f"PID: {os.getpid()} Started")
+    #print(f"PID: {os.getpid()} Started")
     key_schedule = key
 
     """for-loop to iterate over all 16-byte plaintext blocks"""
@@ -429,7 +433,7 @@ def aes_encrypt_single_block(pt, key):
     """Update current cipher round for indexing"""
     #curr_round += 1
 
-    print(f"PID: {os.getpid()} Ended\r")
+    #print(f"PID: {os.getpid()} Ended\r")
     return ciphertext
 
 
@@ -508,19 +512,61 @@ def AES_Encrypt_Parallelized(args, key):
         max_workers = 8
         # Loop to create parts
         part_size = len(padded) // max_workers
-        final_index = 0
+        print(f'part_size initially: {part_size}')
 
+        if (remainder := (part_size % 16)) != 0:  # take chunks that are multiples of 16
+            print(f'Our remainder is: {remainder}')
+            part_size -= remainder
+
+        print(f'part_size: {part_size}')
+
+        full_parts = math.floor( len(padded) // part_size)
+        remaining_blocks = len(padded) - full_parts*part_size
+
+        ind = 0
+        for i in range(0, full_parts):
+            parts.append(padded[ind:ind+part_size])
+            ind += part_size
+
+        print(f'End index: {ind}')
+
+        if remaining_blocks > 0:
+            parts.append(padded[ind::])
+        print(f'Full parts: {full_parts}, len(padded) = {len(padded)}')
+        print(f'Max workers: {max_workers}, len(padded)// max_workers: {len(padded)// max_workers} ')
+
+        # while remaining > part_size
+        # parts.append(padded[])
+        #remaining = len(padded) - curr_index
+        '''
+        appended = 0
+        i = 0
+        while appended < len(padded): # no clean way to get number of parts
+            parts.append( padded[])
+            part = 
+
+            appended += len(part)
+        '''
+        '''
         for i in range(0, len(padded), part_size):
             parts.append(padded[i:i + part_size])
-            final_index = i
-
+            final_index = i + part_size
+        '''
         bytes_remaining = len(padded) - (part_size * max_workers)
         #remainder = padded[-bytes_remaining : -1]
 
+        print('_-------------------------')
+        print([part for part in parts])
+        #print(''.join(part.decode() for part in parts))
+        print('_-------------------------')
+        for part in parts:
+            print(len(part))
+        print('_-------------------------')
+
         # TODO: fix truncation here
         #print(f'remainder: {remainder}')
-        #print(f'final index: {padded[final_index]}')
-        print(f'Final_index: {final_index}, len(padded) {len(padded)}')
+        #print(f'bytes_remaining: {bytes_remaining}')
+        #print(f'Final_index: {final_index}, len(padded) {len(padded)}')
 
         start = time.time_ns()
         # map(): Apply a function to an iterable of elements.
