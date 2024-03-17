@@ -4,6 +4,7 @@ import platform
 import re
 import subprocess
 import aesencrypt
+import binascii
 
 PT_BLOCK_SIZE = 16
 AES_128_KEY_SIZE = 16
@@ -34,6 +35,11 @@ def debug_print_arr_2dhex(hex_array):
             print(f'{col:#04x}', end=' ')
         print()
 
+def print_key_hex(raw_key):
+    '''
+    Converts bytes object to hex
+    '''
+    print(binascii.hexlify(raw_key))
 
 def debug_print_arr_2dhex_1line(hex_array):
     """
