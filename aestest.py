@@ -18,7 +18,7 @@ if __name__ == '__main__':
 	print("------------------------------------")
 	print("CSCI-555L AES-128 ECB Implementation")
 	print("------------------------------------")
-	print(f'[Processor Info]: {tools.get_processor_name()}\r')
+	#print(f'[Processor Info]: {tools.get_processor_name()}\r')
 	print(f'[OS]: {platform.system()}\r')
 	print(f'[Cores]: {os.cpu_count()}\r')
 
@@ -51,8 +51,13 @@ if __name__ == '__main__':
 			kf.write(key)
 
 	# Utilize AES-128 key expansion to generate round keys
+	print(bytearray(key))
+	#for i in key:
+		#print(f'{i:016x}', end=' ')
+	tools.print_key_hex(key)
+
 	key = tools.key_expansion(key)
-	tools.debug_print_arr_2dhex(key)
+	#tools.debug_print_arr_2dhex(key)
 
 	# TODO : All AES Encrypt/Decrypt should return back times
 	# TODO : Merge @sara's evaluation code to wrap time calculation
