@@ -9,6 +9,7 @@ import aesencrypt
 import aesdecrypt
 import argparse
 import os
+import platform
 import tools
 import sys
 
@@ -17,6 +18,9 @@ if __name__ == '__main__':
 	print("------------------------------------")
 	print("CSCI-555L AES-128 ECB Implementation")
 	print("------------------------------------")
+	print(f'[Processor Info]: {tools.get_processor_name()}\r')
+	print(f'[OS]: {platform.system()}\r')
+	print(f'[Cores]: {os.cpu_count()}\r')
 
 	parser = argparse.ArgumentParser(prog='aestest.py', description='Perform AES-128 ECB Encryption / Decryption')
 	parser.add_argument('-p', action='store_true', help='[Optional] Enable parallelization flag')
@@ -50,12 +54,12 @@ if __name__ == '__main__':
 	key = tools.key_expansion(key)
 	tools.debug_print_arr_2dhex(key)
 
+	# TODO : All AES Encrypt/Decrypt should return back times
+	# TODO : Merge @sara's evaluation code to wrap time calculation
 	if args.p:
 		if args.encrypt:
-			# TODO AES-128 ECB Parallelized Encrypt
 			aesencrypt.AES_Encrypt_Parallelized(args, key)
 		else:
-			# TODO AES-128 ECB Parallelized Decrypt
 			aesdecrypt.AES_Decrypt_Parallelized(args, key)
 	else:
 		if args.encrypt:

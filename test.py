@@ -273,12 +273,12 @@ def test_aes():
 
 if __name__ == '__main__':
     print("---- AES Test Entry ----\r\n")
-    unittest.main()
-    # mix_cols_test()
-    # inv_mix_cols_test()
-    # sub_bytes_test()
-    # key_expansion_test()
-    # inv_shift_rows_test()
-    # test_aes()
+    # unittest.main()
+    mix_cols_test()
+    inv_mix_cols_test()
+    sub_bytes_test()
+    key_expansion_test()
+    inv_shift_rows_test()
+    test_aes()
 
 

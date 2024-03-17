@@ -5,9 +5,14 @@
 * Purpose    : This project is an implementation of the Advanced *
 *              Encryption Standard (AES) using a 128-bit key.    *
 *****************************************************************"""
+import concurrent
+import os
+from concurrent.futures import ProcessPoolExecutor
+
 import aesdecrypt
 import tools
 import time
+from multiprocessing import Pool, TimeoutError
 
 mix_col_matrix = [[0x02, 0x03, 0x01, 0x01],
                    [0x01, 0x02, 0x03, 0x01],
@@ -184,9 +189,6 @@ def mix_columns_transform(I_row, S_Col):
 
     return temp & 0xFF
 
-
-
-
 def key_expansion(aes_key):
     """
     Function :   key_expansion
@@ -294,7 +296,7 @@ def state_store(state, ct):
             ct.append(elem)
 
 
-def aes_encrypt(pt,key):
+def aes_encrypt(pt, key):
     """
     Function :   aes_encrypt
     Parameters : 1D Plaintext Byte array, 1D key array (16 bytes)
@@ -311,6 +313,8 @@ def aes_encrypt(pt,key):
 
     """for-loop to iterate over all 16-byte plaintext blocks"""
     for i in range(num_blocks):
+        if i % 100000 == 0:
+            print(f"PID: {os.getpid()} Processed {i} out of {num_blocks} blocks")
         state = [[0x00, 0x00, 0x00, 0x00], [0x00, 0x00, 0x00, 0x00], [0x00, 0x00, 0x00, 0x00], [0x00, 0x00, 0x00, 0x00]]
 
         """This function will turn the 1D plaintext into multiple 2D state arrays"""
@@ -360,6 +364,72 @@ def aes_encrypt(pt,key):
         curr_round += 1
 
 
+    return ciphertext
+
+
+def aes_encrypt_single_block(pt, key):
+    """
+    Function :   aes_encrypt
+    Parameters : 1D Plaintext Byte array, 1D key array (16 bytes)
+    Output :     1D ciphertext array
+    Description: AES-128 Encryption Algorithm
+    """
+    ciphertext = bytearray([])
+    curr_round = 0
+
+    print(f"PID: {os.getpid()} Started")
+    key_schedule = key
+
+    """for-loop to iterate over all 16-byte plaintext blocks"""
+    state = [[0x00, 0x00, 0x00, 0x00], [0x00, 0x00, 0x00, 0x00], [0x00, 0x00, 0x00, 0x00], [0x00, 0x00, 0x00, 0x00]]
+
+    """This function will turn the 1D plaintext into multiple 2D state arrays"""
+    populate_state(state, pt, curr_round)
+
+    round_key = extract_key(key_schedule[0])
+
+    state = xor_2d(state, round_key)
+
+    """Perform necessary shifting, mixing, and substitution on 2D state array"""
+    for aes_round in range(1, 11, 1):
+        # print(f'[ENCRYPT]: round{aes_round}: Start of Round')
+        # tools.debug_print_arr_2dhex_1line(state)
+        # print()
+
+        # print(f'[ENCRYPT]: round{aes_round}: After SubBytes')
+        s_box_sub(state)
+        # tools.debug_print_arr_2dhex_1line(state)
+        # print()
+
+        # print(f'[ENCRYPT]: round{aes_round}: After ShiftRows')
+        shift_rows(state)
+        # tools.debug_print_arr_2dhex_1line(state)
+        # print()
+
+        """Mix Columns skipped for only round 10"""
+        if aes_round != 10:
+            # print(f'[ENCRYPT]: round{aes_round}: After MixColumns')
+            state = mix_cols(state)
+            # tools.debug_print_arr_2dhex_1line(state)
+            # print()
+
+        # print(f'[ENCRYPT]: round{aes_round}: Round key Value')
+        round_key = extract_key(key_schedule[aes_round])
+
+        state = xor_2d(state, round_key)
+        # tools.debug_print_arr_2dhex_1line(round_key)
+        #print()
+
+    # print(f'AES Encrypt Complete')
+    # tools.debug_print_arr_2dhex(state)
+
+    """Store 16 extra bytes into ciphertext"""
+    state_store(state, ciphertext)
+
+    """Update current cipher round for indexing"""
+    #curr_round += 1
+
+    print(f"PID: {os.getpid()} Ended\r")
     return ciphertext
 
 
@@ -421,6 +491,41 @@ def AES_Encrypt_Parallelized(args, key):
     Description: Perform Parallelized AES Encryption
     """
     print("[INFO]: Parallelized Encryption")
+    ciphertext = b''
+    encrypted_blocks = []
+    futures = []
+    with open(args.infile, 'rb') as infile:
+        data = infile.read()
+
+        if len(data) % 16 != 0:
+            padded = tools.iso_iec_7816_4_pad(data)
+            num_blocks = int(len(padded)/16)
+        else:
+            num_blocks = int(len(data)/16)
+            padded = data
+
+        parts = []
+        max_workers = 8
+        # Loop to create parts
+        part_size = len(padded) // max_workers
+        for i in range(0, len(padded), part_size):
+            parts.append(padded[i:i + part_size])
+
+        start = time.time_ns()
+        # map(): Apply a function to an iterable of elements.
+        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+            futures.extend(executor.submit(aes_encrypt, part, key) for part in parts)
+
+            for future in futures:
+                encrypted_blocks.append(future.result())
+
+        # Concatenate the encrypted blocks in the original order
+        ciphertext = b''.join(encrypted_blocks)
+        end = time.time_ns()
+
+        print(f'[INFO]: Parallelized AES Encryption took {(end - start) / 1e9} s')
+        with open(args.outfile, 'wb') as outfile:
+            outfile.write(ciphertext)
 
 
 

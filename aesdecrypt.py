@@ -7,6 +7,8 @@
 *****************************************************************"""
 import tools
 import time
+import os
+from concurrent.futures import ProcessPoolExecutor
 
 s_box_inv = [[0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb],
             [0x7c, 0xe3, 0x39, 0x82, 0x9b, 0x2f, 0xff, 0x87, 0x34, 0x8e, 0x43, 0x44, 0xc4, 0xde, 0xe9, 0xcb],
@@ -395,6 +397,8 @@ def aes_decrypt(ct, key):
 
     """for-loop to iterate over all 16-byte plaintext blocks"""
     for i in range(num_blocks):
+        if i % 100000 == 0:
+            print(f"PID: {os.getpid()} Processed {i} out of {num_blocks} blocks")
         state = [[0x00, 0x00, 0x00, 0x00], [0x00, 0x00, 0x00, 0x00], [0x00, 0x00, 0x00, 0x00], [0x00, 0x00, 0x00, 0x00]]
 
         """This function will turn the 1D plaintext into multiple 2D state arrays"""
@@ -455,6 +459,82 @@ def aes_decrypt(ct, key):
 
         """Update current cipher round for indexing"""
         curr_round += 1
+
+    return plaintext
+
+
+def aes_decrypt_single_block(ct, key):
+    """
+    Function :   aes_decrypt
+    Parameters : 1D ciphertext Byte array, 1D key array (16 bytes)
+    Output :     1D plaintext array
+    Description: AES-128 Decryption Algorithm
+    """
+    plaintext = bytearray([])
+    curr_round = 0
+
+    """generate key schedule for all 10 rounds"""
+    # key_schedule = key_expansion(key)
+    key_schedule = key
+
+    """for-loop to iterate over all 16-byte plaintext blocks"""
+    state = [[0x00, 0x00, 0x00, 0x00], [0x00, 0x00, 0x00, 0x00], [0x00, 0x00, 0x00, 0x00], [0x00, 0x00, 0x00, 0x00]]
+
+    """This function will turn the 1D plaintext into multiple 2D state arrays"""
+    populate_state(state, ct, curr_round)
+
+    round_key = extract_key(key_schedule[10])
+
+    # print(f'[DECRYPT] round{0}: iinput')
+    # tools.debug_print_arr_2dhex_1line(state)
+    # print()
+
+    # print(f'[DECRYPT] round{0}: ik_sch')
+    # tools.debug_print_arr_2dhex_1line(round_key)
+    # print()
+
+    state = xor_2d(state, round_key)
+
+    """Perform necessary shifting, mixing, and substitution on 2D state array"""
+    for inv_curr_round in range(9, -1, -1):
+        # print(f'[DECRYPT] round{10 - inv_curr_round}: istart')
+        # tools.debug_print_arr_2dhex_1line(state)
+        # print()
+
+        # print(f'[DECRYPT] round{10 - inv_curr_round}: is_row')
+        shift_rows_inv(state)
+        # tools.debug_print_arr_2dhex_1line(state)
+        # print()
+
+        # print(f'[DECRYPT] round{10 - inv_curr_round}: is_box')
+        s_box_inv_sub(state)
+        # tools.debug_print_arr_2dhex_1line(state)
+        # print()
+
+        round_key = extract_key(key_schedule[inv_curr_round])
+
+        # print(f'[DECRYPT] round{10 - inv_curr_round}: ik_sch')
+        # tools.debug_print_arr_2dhex_1line(round_key)
+        # print()
+
+        # print(f'[DECRYPT] round{10 - inv_curr_round}: ik_add')
+        state = xor_2d(state, round_key)
+        # tools.debug_print_arr_2dhex_1line(state)
+        # print()
+
+        """Mix Columns skipped for last round"""
+        if inv_curr_round != 0:
+            # print(f'[DECRYPT] round{10 - inv_curr_round}: i_mix_cols')
+            state = inv_mix_cols(state)
+            # tools.debug_print_arr_2dhex_1line(state)
+            # print()
+
+    # print(f'AES Decrypt Complete')
+    # tools.debug_print_arr_2dhex_1line(state)
+    # print()
+
+    """Store 16 extra bytes into ciphertext"""
+    state_store(state, plaintext)
 
     return plaintext
 
@@ -530,3 +610,41 @@ def AES_Decrypt_Parallelized(args, key):
     Description: Perform Parallelized AES Decryption
     """
     print("[INFO]: Parallelized Decryption")
+    plaintext = b''
+    decrypted_blocks = []
+    futures = []
+    with open(args.infile, 'rb') as infile:
+        data = infile.read()
+
+        if len(data) % 16 != 0:
+            padded = tools.iso_iec_7816_4_pad(data)
+            num_blocks = int(len(padded)/16)
+        else:
+            num_blocks = int(len(data)/16)
+            padded = data
+
+        start = time.time_ns()
+        # map(): Apply a function to an iterable of elements.
+        parts = []
+        max_workers = 8
+        # Loop to create parts
+        part_size = len(padded) // max_workers
+        for i in range(0, len(padded), part_size):
+            parts.append(padded[i:i + part_size])
+
+        start = time.time_ns()
+
+        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+            futures.extend(executor.submit(aes_decrypt, part, key) for part in parts)
+
+            for future in futures:
+                decrypted_blocks.append(future.result())
+
+        # Concatenate the encrypted blocks in the original order
+        plaintext = b''.join(decrypted_blocks)
+        end = time.time_ns()
+
+        print(f'[INFO]: Parallelized AES decryption took {(end - start) / 1e9} s')
+        with open(args.outfile, 'wb') as outfile:
+            outfile.write(plaintext)
+
