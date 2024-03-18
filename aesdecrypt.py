@@ -6,8 +6,9 @@
 *              Encryption Standard (AES) using a 128-bit key.    *
 *****************************************************************"""
 import tools
-import time
+import math
 import os
+import time
 from concurrent.futures import ProcessPoolExecutor
 
 s_box_inv = [[0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb],
@@ -629,8 +630,21 @@ def AES_Decrypt_Parallelized(args, key):
         max_workers = 8
         # Loop to create parts
         part_size = len(padded) // max_workers
-        for i in range(0, len(padded), part_size):
-            parts.append(padded[i:i + part_size])
+
+        if (remainder := (part_size % 16)) != 0:  # take chunks that are multiples of 16
+            #print(f'Our remainder is: {remainder}')
+            part_size -= remainder
+
+        full_parts = math.floor( len(padded) // part_size)
+        remaining_blocks = len(padded) - full_parts*part_size
+
+        ind = 0
+        for i in range(0, full_parts):
+            parts.append(padded[ind:ind+part_size])
+            ind += part_size
+
+        if remaining_blocks > 0:
+            parts.append(padded[ind::])
 
         start = time.time_ns()
 
@@ -644,7 +658,8 @@ def AES_Decrypt_Parallelized(args, key):
         plaintext = b''.join(decrypted_blocks)
         end = time.time_ns()
 
+        plaintext = tools.iso_iec_7816_4_unpad(plaintext)
+
         print(f'[INFO]: Parallelized AES decryption took {(end - start) / 1e9} s')
         with open(args.outfile, 'wb') as outfile:
             outfile.write(plaintext)
-
