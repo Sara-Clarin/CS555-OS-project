@@ -11,6 +11,8 @@ import os
 import time
 from concurrent.futures import ProcessPoolExecutor
 
+MAX_WORKERS = 8
+
 s_box_inv = [[0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb],
             [0x7c, 0xe3, 0x39, 0x82, 0x9b, 0x2f, 0xff, 0x87, 0x34, 0x8e, 0x43, 0x44, 0xc4, 0xde, 0xe9, 0xcb],
             [0x54, 0x7b, 0x94, 0x32, 0xa6, 0xc2, 0x23, 0x3d, 0xee, 0x4c, 0x95, 0x0b, 0x42, 0xfa, 0xc3, 0x4e],
@@ -398,8 +400,8 @@ def aes_decrypt(ct, key):
 
     """for-loop to iterate over all 16-byte plaintext blocks"""
     for i in range(num_blocks):
-        if i % 100000 == 0:
-            print(f"PID: {os.getpid()} Processed {i} out of {num_blocks} blocks")
+        #if i % 100000 == 0:
+            #print(f"PID: {os.getpid()} Processed {i} out of {num_blocks} blocks")
         state = [[0x00, 0x00, 0x00, 0x00], [0x00, 0x00, 0x00, 0x00], [0x00, 0x00, 0x00, 0x00], [0x00, 0x00, 0x00, 0x00]]
 
         """This function will turn the 1D plaintext into multiple 2D state arrays"""
@@ -610,6 +612,7 @@ def AES_Decrypt_Parallelized(args, key):
     Output :     None
     Description: Perform Parallelized AES Decryption
     """
+    global MAX_WORKERS
     print("[INFO]: Parallelized Decryption")
     plaintext = b''
     decrypted_blocks = []
@@ -627,9 +630,9 @@ def AES_Decrypt_Parallelized(args, key):
         start = time.time_ns()
         # map(): Apply a function to an iterable of elements.
         parts = []
-        max_workers = 8
+        print(f'[INFO]: Max workers: {MAX_WORKERS}\r')
         # Loop to create parts
-        part_size = len(padded) // max_workers
+        part_size = len(padded) // MAX_WORKERS
 
         if (remainder := (part_size % 16)) != 0:  # take chunks that are multiples of 16
             #print(f'Our remainder is: {remainder}')
@@ -648,7 +651,7 @@ def AES_Decrypt_Parallelized(args, key):
 
         start = time.time_ns()
 
-        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        with ProcessPoolExecutor(max_workers=MAX_WORKERS) as executor:
             futures.extend(executor.submit(aes_decrypt, part, key) for part in parts)
 
             for future in futures:
