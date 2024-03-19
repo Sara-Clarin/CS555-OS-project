@@ -1,0 +1,11 @@
+------------------------------------
+CSCI-555L AES-128 ECB Implementation
+------------------------------------
+[OS]: Darwin
+[Cores]: 8
+Namespace(p=True, k='AES.key', infile='eval_files/2000000000.txt', outfile='2GB_ciphertext.txt', decrypt=False, encrypt=True)
+bytearray(b'xuFS\xb7G\xd0\xd3Y;\x9a\xd1$\xc5\t\x8d')
+b'78754653b747d0d3593b9ad124c5098d'
+[INFO]: Parallelized Encryption
+[INFO]: Max workers: 8
+[INFO]: Parallelized AES Encryption took 9661.06586 s
