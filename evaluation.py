@@ -95,16 +95,16 @@ def Run_Enc_Analysis( ):
             
         file_sizes.append(fsize)
 
-
         sequential_time.append(time.time_ns() - start)
 
         ###############
         #TODO: PARALLEL AES
         ####################
-        # start = time.time_ns()
+        start = time.time_ns()
         # call to aes_parallel
-        #parallel_time.append( time.time_ns() - start)
-        parallel_time.append(0)
+        aesencrypt.aes_enc_parallel(padded, key)
+        parallel_time.append( time.time_ns() - start)
+        #parallel_time.append(0)
 
         fsize += step
 
