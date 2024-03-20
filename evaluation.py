@@ -45,21 +45,25 @@ def GenFileSet():
 
     print("Generating test files....")
     # Could move these to globals if need be
-    fsize = 32 * (10**1) #16 megabyte file
-    step   = 32* (10**1)
+    scalar = 10**
+
+    fsize = 50 * scalar
+    step  = 50 * scalar
 
     for i in range(8):
         print(f"Creating file of size {fsize} .......")
 
         subprocess.run(["python3", "randfile.py", f'{fsize}', '--to_stdout', '0'])
+        
         fsize += step
 
 def Run_Enc_Analysis( ):
 
     # TODO: generate keys beforehand and extract them
+    scalar = 10**3  #Kilobyte
 
-    fsize = 32 * (10**1) #16 megabyte file
-    step  = 32* (10**1)
+    fsize = 50 * scalar
+    step  = 50 * scalar
 
     for i in range(8):
         print(f"Testing {fsize} .......")
@@ -87,15 +91,16 @@ def Run_Enc_Analysis( ):
             num_blocks = int(len(data)/16)
             padded = data
 
+        print("[INFO]: Non-Parallel Encryption")
+
         start = time.time_ns()
         for x in range(num_blocks):
             block = padded[x*16: (x*16)+16]
             aesencrypt.aes_encrypt(block, key)   # do not store ciphertext for speed
-            print(f'[INFO]: Blocks remaining: {num_blocks - x}')
-            
-        file_sizes.append(fsize)
+            #print(f'[INFO]: Blocks remaining: {num_blocks - x}')
 
         sequential_time.append(time.time_ns() - start)
+        file_sizes.append(fsize)
 
         ###############
         #TODO: PARALLEL AES
@@ -109,20 +114,42 @@ def Run_Enc_Analysis( ):
         fsize += step
 
     print(f'sequential time: {sequential_time}')
+    print(f'Parallel time: {parallel_time}')
     print(f'File sizes: {file_sizes}')
+
+    
+    with open("Kilobyte_results.txt", "w+") as f:
+        f.write(f'Comparison of Parallel/Non-Parallel AES execution time\n')
+        f.write(f'-------------- Sequential AES ------------')
+        for seqtime in zip(file_sizes, sequential_time):
+            f.write(f'{seqtime[0]/ (scalar)} KB - {seqtime[1]})')
+
+        f.write(f'-------------- Parallel AES ------------')
+
+        for partime in zip(file_sizes, parallel_time):
+            f.write(f'{partime[0]/ (scalar)} KB - {partime[1]})')
+    
+    return scalar
 
 # create a bar chart
 # If this doesn't work, then a CSV 
-def Plot_bar(xvals, yvals1, yvals2):
+def Plot_bar(xvals, yvals1, yvals2, scalar):
+    
+    barWidth = (xvals[1] - xvals[0]) / (10 * scalar)
+    offset = barWidth/2 
 
-    barWidth = 100
+    x1 = [(x / scalar)-offset for x in xvals]
+    x2 = [(x / scalar)+offset for x in xvals]
+
+
+    print("barWidth", barWidth)
 
     #file_sizes on x axis, 
-    plt.bar(xvals, yvals1, color='blue', width=barWidth)
-    #plt.bar(xvals, yvals2, color='red')
-
-    plt.ylabel("Execution time ")
-    plt.xlabel("File size")
+    plt.bar(x1, yvals1, color='blue', width=barWidth, label="Sequential AES")
+    plt.bar(x2, yvals2, color='red', width=barWidth, label="Parallelized AES")
+    plt.legend(loc="upper left")
+    plt.ylabel("Execution time (s)")
+    plt.xlabel("File size - KB")
     plt.show()
     
 # Option to examine line graph
@@ -138,8 +165,8 @@ def main():
     if args.gen:
         GenFileSet()
         exit(0)
-    Run_Enc_Analysis()
-    Plot_bar(file_sizes, sequential_time, parallel_time)
+    scalar = Run_Enc_Analysis()
+    Plot_bar(file_sizes, sequential_time, parallel_time, scalar)
     #Plot(file_sizes, parallel_time)
 
 

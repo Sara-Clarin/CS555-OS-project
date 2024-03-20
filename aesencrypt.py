@@ -379,8 +379,6 @@ def aes_enc_parallel( padded, key):
     if remaining_blocks > 0:
         parts.append(padded[ind::])
     
-    bytes_remaining = len(padded) - (part_size * max_workers)
-
     start = time.time_ns()
     # map(): Apply a function to an iterable of elements.
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
@@ -486,7 +484,7 @@ def AES_Encrypt(args, key):
         for x in range(num_blocks):
             block = padded[x*16: (x*16)+16]
             ciphertext += (aes_encrypt(block, key))
-            print(f'[INFO]: Blocks remaining: {num_blocks - x}')
+            #print(f'[INFO]: Blocks remaining: {num_blocks - x}')
         end = time.time_ns()
         print(f'[INFO]: Non-Parallelized AES Encryption took {(end-start)} ns')
 
@@ -521,7 +519,7 @@ def AES_Encrypt_Parallelized(args, key):
         part_size = len(padded) // max_workers
 
         if (remainder := (part_size % 16)) != 0:  # take chunks that are multiples of 16
-            print(f'Our remainder is: {remainder}')
+            #print(f'Our remainder is: {remainder}')
             part_size -= remainder
 
         full_parts = math.floor( len(padded) // part_size)
@@ -535,8 +533,6 @@ def AES_Encrypt_Parallelized(args, key):
         if remaining_blocks > 0:
             parts.append(padded[ind::])
         
-        bytes_remaining = len(padded) - (part_size * max_workers)
-
         start = time.time_ns()
         # map(): Apply a function to an iterable of elements.
         with ProcessPoolExecutor(max_workers=max_workers) as executor:
