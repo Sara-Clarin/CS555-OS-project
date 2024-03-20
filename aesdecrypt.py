@@ -304,10 +304,7 @@ def key_expansion(aes_key):
             temp ^= r_const[r_const_ptr]
             r_const_ptr += 1
 
-            # print(f'[Debug] After XOR with Rcon: 0x{temp:02x}')
-
         temp ^= w[x - 4]
-        # print(f'[Debug] After XOR with w[i-Nk]: 0x{temp:02x}')
         w.append(temp)
 
     key_out = [
@@ -395,7 +392,6 @@ def aes_decrypt(ct, key):
     curr_round = 0
 
     """generate key schedule for all 10 rounds"""
-    # key_schedule = key_expansion(key)
     key_schedule = key
 
     """for-loop to iterate over all 16-byte plaintext blocks"""
@@ -408,55 +404,21 @@ def aes_decrypt(ct, key):
         populate_state(state, ct, curr_round)
 
         round_key = extract_key(key_schedule[10])
-
-        # print(f'[DECRYPT] round{0}: iinput')
-        # tools.debug_print_arr_2dhex_1line(state)
-        # print()
-
-        # print(f'[DECRYPT] round{0}: ik_sch')
-        # tools.debug_print_arr_2dhex_1line(round_key)
-        # print()
-
         state = xor_2d(state, round_key)
 
         """Perform necessary shifting, mixing, and substitution on 2D state array"""
         for inv_curr_round in range(9, -1, -1):
-            # print(f'[DECRYPT] round{10 - inv_curr_round}: istart')
-            # tools.debug_print_arr_2dhex_1line(state)
-            # print()
 
-            # print(f'[DECRYPT] round{10 - inv_curr_round}: is_row')
             shift_rows_inv(state)
-            # tools.debug_print_arr_2dhex_1line(state)
-            # print()
-
-            # print(f'[DECRYPT] round{10 - inv_curr_round}: is_box')
             s_box_inv_sub(state)
-            # tools.debug_print_arr_2dhex_1line(state)
-            # print()
 
             round_key = extract_key(key_schedule[inv_curr_round])
 
-            # print(f'[DECRYPT] round{10 - inv_curr_round}: ik_sch')
-            # tools.debug_print_arr_2dhex_1line(round_key)
-            # print()
-
-            # print(f'[DECRYPT] round{10 - inv_curr_round}: ik_add')
             state = xor_2d(state, round_key)
-            # tools.debug_print_arr_2dhex_1line(state)
-            # print()
-
             """Mix Columns skipped for last round"""
             if inv_curr_round != 0:
-                # print(f'[DECRYPT] round{10 - inv_curr_round}: i_mix_cols')
                 state = inv_mix_cols(state)
-                # tools.debug_print_arr_2dhex_1line(state)
-                # print()
-
-        # print(f'AES Decrypt Complete')
-        # tools.debug_print_arr_2dhex_1line(state)
-        # print()
-
+            
         """Store 16 extra bytes into ciphertext"""
         state_store(state, plaintext)
 
@@ -477,7 +439,6 @@ def aes_decrypt_single_block(ct, key):
     curr_round = 0
 
     """generate key schedule for all 10 rounds"""
-    # key_schedule = key_expansion(key)
     key_schedule = key
 
     """for-loop to iterate over all 16-byte plaintext blocks"""
@@ -488,53 +449,22 @@ def aes_decrypt_single_block(ct, key):
 
     round_key = extract_key(key_schedule[10])
 
-    # print(f'[DECRYPT] round{0}: iinput')
-    # tools.debug_print_arr_2dhex_1line(state)
-    # print()
-
-    # print(f'[DECRYPT] round{0}: ik_sch')
-    # tools.debug_print_arr_2dhex_1line(round_key)
-    # print()
-
     state = xor_2d(state, round_key)
 
     """Perform necessary shifting, mixing, and substitution on 2D state array"""
     for inv_curr_round in range(9, -1, -1):
-        # print(f'[DECRYPT] round{10 - inv_curr_round}: istart')
-        # tools.debug_print_arr_2dhex_1line(state)
-        # print()
 
-        # print(f'[DECRYPT] round{10 - inv_curr_round}: is_row')
         shift_rows_inv(state)
-        # tools.debug_print_arr_2dhex_1line(state)
-        # print()
 
-        # print(f'[DECRYPT] round{10 - inv_curr_round}: is_box')
         s_box_inv_sub(state)
-        # tools.debug_print_arr_2dhex_1line(state)
-        # print()
 
         round_key = extract_key(key_schedule[inv_curr_round])
 
-        # print(f'[DECRYPT] round{10 - inv_curr_round}: ik_sch')
-        # tools.debug_print_arr_2dhex_1line(round_key)
-        # print()
-
-        # print(f'[DECRYPT] round{10 - inv_curr_round}: ik_add')
         state = xor_2d(state, round_key)
-        # tools.debug_print_arr_2dhex_1line(state)
-        # print()
 
         """Mix Columns skipped for last round"""
         if inv_curr_round != 0:
-            # print(f'[DECRYPT] round{10 - inv_curr_round}: i_mix_cols')
             state = inv_mix_cols(state)
-            # tools.debug_print_arr_2dhex_1line(state)
-            # print()
-
-    # print(f'AES Decrypt Complete')
-    # tools.debug_print_arr_2dhex_1line(state)
-    # print()
 
     """Store 16 extra bytes into ciphertext"""
     state_store(state, plaintext)
@@ -561,7 +491,55 @@ def iso_iec_7816_4_unpad(pt):
 
     return ret_pt
 
+def aes_dec_parallel( padded, key):
+    """
+    Function :   AES_Decrypt_Parallelized
+    Parameters : program arguments, key schedule array
+    Output :     None
+    Description: Perform Parallelized AES Decryption
+    """
+    global MAX_WORKERS
+    print("[INFO]: Parallelized Decryption")
+    plaintext = b''
+    decrypted_blocks = []
+    futures = []
+    
+    parts = []
+    print(f'[INFO]: Max workers: {MAX_WORKERS}\r')
+    # Loop to create parts
+    part_size = len(padded) // MAX_WORKERS
 
+    if (remainder := (part_size % 16)) != 0:  # take chunks that are multiples of 16
+        #print(f'Our remainder is: {remainder}')
+        part_size -= remainder
+
+    full_parts = math.floor( len(padded) // part_size)
+    remaining_blocks = len(padded) - full_parts*part_size
+
+    ind = 0
+    for i in range(0, full_parts):
+        parts.append(padded[ind:ind+part_size])
+        ind += part_size
+
+    if remaining_blocks > 0:
+        parts.append(padded[ind::])
+
+    start = time.time_ns()
+
+    with ProcessPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        futures.extend(executor.submit(aes_decrypt, part, key) for part in parts)
+
+        for future in futures:
+            decrypted_blocks.append(future.result())
+
+    # Concatenate the encrypted blocks in the original order
+    plaintext = b''.join(decrypted_blocks)
+    end = time.time_ns()
+
+    plaintext = tools.iso_iec_7816_4_unpad(plaintext)
+
+    print(f'[INFO]: Parallelized AES decryption took {(end - start) / 1e9} s')
+    
 def aes_dec_main(ct, key):
     """
     Function :   main
@@ -597,7 +575,7 @@ def AES_Decrypt(args, key):
             plaintext += (aes_decrypt(block, key))
             print(f'[INFO]: Blocks remaining: {num_blocks - x}')
         end = time.time_ns()
-        print(f'[INFO]: Non-Parallelized AES Encryption took {(end - start) / 1e9} s')
+        print(f'[INFO]: Non-Parallelized AES Decryption took {(end - start) / 1e9} s')
 
         unpadded = tools.iso_iec_7816_4_unpad(plaintext)
 

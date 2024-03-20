@@ -45,27 +45,35 @@ def GenFileSet():
 
     print("Generating test files....")
     # Could move these to globals if need be
-    scalar = 10**
+    scalar = 10** 6
 
-    fsize = 50 * scalar
-    step  = 50 * scalar
+    fsize = 1 * scalar
+    step  = 1 * scalar
 
-    for i in range(8):
+    for i in range(3):
         print(f"Creating file of size {fsize} .......")
 
         subprocess.run(["python3", "randfile.py", f'{fsize}', '--to_stdout', '0'])
         
         fsize += step
 
-def Run_Enc_Analysis( ):
+def Run_Enc_Analysis( mode):
 
+    if mode == "Enc":
+        print("Running Analysis for ENCRYPTION")
+        aes_seq_func = aesencrypt.aes_encrypt
+        aes_par_func = aesencrypt.aes_enc_parallel
+    else:
+        print("Running Analysis for DECRYPTION")
+        aes_seq_func = aesdecrypt.aes_decrypt
+        aes_par_func = aesdecrypt.aes_dec_parallel
     # TODO: generate keys beforehand and extract them
-    scalar = 10**3  #Kilobyte
+    scalar = 10**6 #Megabyte
 
-    fsize = 50 * scalar
-    step  = 50 * scalar
+    fsize = 1 * scalar
+    step  = 1 * scalar
 
-    for i in range(8):
+    for i in range(3):
         print(f"Testing {fsize} .......")
 
         k = os.urandom(16)   # TODO: fix this
@@ -91,25 +99,25 @@ def Run_Enc_Analysis( ):
             num_blocks = int(len(data)/16)
             padded = data
 
-        print("[INFO]: Non-Parallel Encryption")
+        print(f"[INFO]: Non-Parallel {mode}ryption")
 
         start = time.time_ns()
         for x in range(num_blocks):
             block = padded[x*16: (x*16)+16]
-            aesencrypt.aes_encrypt(block, key)   # do not store ciphertext for speed
+            #aesencrypt.aes_encrypt(block, key)   # do not store ciphertext for speed
+            aes_seq_func(block, key)
             #print(f'[INFO]: Blocks remaining: {num_blocks - x}')
 
         sequential_time.append(time.time_ns() - start)
         file_sizes.append(fsize)
 
         ###############
-        #TODO: PARALLEL AES
+        # PARALLEL AES
         ####################
         start = time.time_ns()
-        # call to aes_parallel
-        aesencrypt.aes_enc_parallel(padded, key)
+        #aesencrypt.aes_enc_parallel(padded, key)
+        aes_par_func( padded, key)
         parallel_time.append( time.time_ns() - start)
-        #parallel_time.append(0)
 
         fsize += step
 
@@ -118,16 +126,16 @@ def Run_Enc_Analysis( ):
     print(f'File sizes: {file_sizes}')
 
     
-    with open("Kilobyte_results.txt", "w+") as f:
+    with open(f"Megabyte_results_{mode}.txt", "w+") as f:
         f.write(f'Comparison of Parallel/Non-Parallel AES execution time\n')
-        f.write(f'-------------- Sequential AES ------------')
+        f.write(f'-------------- Sequential AES ------------\n')
         for seqtime in zip(file_sizes, sequential_time):
-            f.write(f'{seqtime[0]/ (scalar)} KB - {seqtime[1]})')
+            f.write(f'{seqtime[0]/ (scalar)} MB {seqtime[1]}\n')
 
-        f.write(f'-------------- Parallel AES ------------')
+        f.write(f'\n-------------- Parallel AES ------------\n')
 
         for partime in zip(file_sizes, parallel_time):
-            f.write(f'{partime[0]/ (scalar)} KB - {partime[1]})')
+            f.write(f'{partime[0]/ (scalar)} MB - {partime[1]}\n')
     
     return scalar
 
@@ -148,8 +156,9 @@ def Plot_bar(xvals, yvals1, yvals2, scalar):
     plt.bar(x1, yvals1, color='blue', width=barWidth, label="Sequential AES")
     plt.bar(x2, yvals2, color='red', width=barWidth, label="Parallelized AES")
     plt.legend(loc="upper left")
+    #plt.title(label="Encryption Comparison - MB File sizes")
     plt.ylabel("Execution time (s)")
-    plt.xlabel("File size - KB")
+    plt.xlabel("File size - MB")
     plt.show()
     
 # Option to examine line graph
@@ -160,12 +169,30 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--gen", help="Generate new file set", type=int)
+
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument('-d', '--decrypt', action='store_true', help='[Required] Decrypt flag')
+    mode.add_argument('-e', '--encrypt', action='store_true', help='[Required] Encrypt flag')
     args = parser.parse_args()
 
     if args.gen:
         GenFileSet()
         exit(0)
-    scalar = Run_Enc_Analysis()
+
+    if args.encrypt:
+        scalar = Run_Enc_Analysis("Enc")
+    elif args.decrypt:
+        scalar = Run_Enc_Analysis("Dec")
+    else:
+        print("Please specify either encryption or decryption mode")
+
+    '''
+
+    sequential_time = [14693795000, 30218976000, 44778775000]
+    parallel_time = [5418044000, 10291946000, 15120102000]
+    file_sizes = [1000000, 2000000, 3000000]
+    scalar = 10**6
+    '''
     Plot_bar(file_sizes, sequential_time, parallel_time, scalar)
     #Plot(file_sizes, parallel_time)
 
