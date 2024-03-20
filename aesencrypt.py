@@ -15,8 +15,6 @@ import time
 from multiprocessing import Pool, TimeoutError
 import math
 
-MAX_WORKERS = 8
-
 mix_col_matrix = [[0x02, 0x03, 0x01, 0x01],
                    [0x01, 0x02, 0x03, 0x01],
                    [0x01, 0x01, 0x02, 0x03],
@@ -310,11 +308,7 @@ def aes_encrypt(pt, key):
     num_blocks = int(len(pt) / 16)
     curr_round = 0
 
-    if len(pt) % 16 != 0:
-        print("Whoopsie! PT not divisible by 16")
-        print(f'Remainder: {len(pt) % 16}')
     """generate key schedule for all 10 rounds"""
-    # key_schedule = key_expansion(key)
     key_schedule = key
 
     """for-loop to iterate over all 16-byte plaintext blocks"""
@@ -332,46 +326,73 @@ def aes_encrypt(pt, key):
 
         """Perform necessary shifting, mixing, and substitution on 2D state array"""
         for aes_round in range(1, 11, 1):
-            # print(f'[ENCRYPT]: round{aes_round}: Start of Round')
-            # tools.debug_print_arr_2dhex_1line(state)
-            # print()
 
-            # print(f'[ENCRYPT]: round{aes_round}: After SubBytes')
             s_box_sub(state)
-            # tools.debug_print_arr_2dhex_1line(state)
-            # print()
 
-            # print(f'[ENCRYPT]: round{aes_round}: After ShiftRows')
             shift_rows(state)
-            # tools.debug_print_arr_2dhex_1line(state)
-            # print()
 
             """Mix Columns skipped for only round 10"""
             if aes_round != 10:
-                # print(f'[ENCRYPT]: round{aes_round}: After MixColumns')
                 state = mix_cols(state)
-                # tools.debug_print_arr_2dhex_1line(state)
-                # print()
 
-            # print(f'[ENCRYPT]: round{aes_round}: Round key Value')
             round_key = extract_key(key_schedule[aes_round])
 
             state = xor_2d(state, round_key)
-            # tools.debug_print_arr_2dhex_1line(round_key)
-            #print()
-
-        # print(f'AES Encrypt Complete')
-        # tools.debug_print_arr_2dhex(state)
-
+        
         """Store 16 extra bytes into ciphertext"""
         state_store(state, ciphertext)
 
         """Update current cipher round for indexing"""
         curr_round += 1
 
-
     return ciphertext
 
+def aes_enc_parallel( padded, key):
+    """
+    Function :   AES_Encrypt_Parallelized
+    Parameters : padded plaintext string, bytestring key
+    Output :     None
+    Description: Perform Parallelized AES Encryption
+    """
+    print("[INFO]: Parallelized Encryption")
+    ciphertext = b''
+    encrypted_blocks = []
+    futures = []
+
+    parts = []
+    max_workers = 8
+    # Loop to create parts
+    part_size = len(padded) // max_workers
+
+    if (remainder := (part_size % 16)) != 0:  # take chunks that are multiples of 16
+        print(f'Our remainder is: {remainder}')
+        part_size -= remainder
+
+    full_parts = math.floor( len(padded) // part_size)
+    remaining_blocks = len(padded) - full_parts*part_size
+
+    ind = 0
+    for i in range(0, full_parts):
+        parts.append(padded[ind:ind+part_size])
+        ind += part_size
+
+    if remaining_blocks > 0:
+        parts.append(padded[ind::])
+    
+    start = time.time_ns()
+    # map(): Apply a function to an iterable of elements.
+    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        futures.extend(executor.submit(aes_encrypt, part, key) for part in parts)
+
+        for future in futures:
+            encrypted_blocks.append(future.result())
+
+    # Concatenate the encrypted blocks in the original order
+    ciphertext = b''.join(encrypted_blocks)
+    end = time.time_ns()
+
+    print(f'[INFO]: Parallelized AES Encryption took {(end - start) / 1e9} s')
+    #return ciphertext
 
 def aes_encrypt_single_block(pt, key):
     """
@@ -398,36 +419,18 @@ def aes_encrypt_single_block(pt, key):
 
     """Perform necessary shifting, mixing, and substitution on 2D state array"""
     for aes_round in range(1, 11, 1):
-        # print(f'[ENCRYPT]: round{aes_round}: Start of Round')
-        # tools.debug_print_arr_2dhex_1line(state)
-        # print()
 
-        # print(f'[ENCRYPT]: round{aes_round}: After SubBytes')
         s_box_sub(state)
-        # tools.debug_print_arr_2dhex_1line(state)
-        # print()
 
-        # print(f'[ENCRYPT]: round{aes_round}: After ShiftRows')
         shift_rows(state)
-        # tools.debug_print_arr_2dhex_1line(state)
-        # print()
 
         """Mix Columns skipped for only round 10"""
         if aes_round != 10:
-            # print(f'[ENCRYPT]: round{aes_round}: After MixColumns')
             state = mix_cols(state)
-            # tools.debug_print_arr_2dhex_1line(state)
-            # print()
 
-        # print(f'[ENCRYPT]: round{aes_round}: Round key Value')
         round_key = extract_key(key_schedule[aes_round])
 
         state = xor_2d(state, round_key)
-        # tools.debug_print_arr_2dhex_1line(round_key)
-        #print()
-
-    # print(f'AES Encrypt Complete')
-    # tools.debug_print_arr_2dhex(state)
 
     """Store 16 extra bytes into ciphertext"""
     state_store(state, ciphertext)
@@ -481,7 +484,7 @@ def AES_Encrypt(args, key):
         for x in range(num_blocks):
             block = padded[x*16: (x*16)+16]
             ciphertext += (aes_encrypt(block, key))
-            print(f'[INFO]: Blocks remaining: {num_blocks - x}')
+            #print(f'[INFO]: Blocks remaining: {num_blocks - x}')
         end = time.time_ns()
         print(f'[INFO]: Non-Parallelized AES Encryption took {(end-start)} ns')
 
@@ -496,7 +499,6 @@ def AES_Encrypt_Parallelized(args, key):
     Output :     None
     Description: Perform Parallelized AES Encryption
     """
-    global MAX_WORKERS
     print("[INFO]: Parallelized Encryption")
     ciphertext = b''
     encrypted_blocks = []
@@ -512,12 +514,12 @@ def AES_Encrypt_Parallelized(args, key):
             padded = data
 
         parts = []
-        print(f'[INFO]: Max workers: {MAX_WORKERS}\r')
+        max_workers = 8
         # Loop to create parts
-        part_size = len(padded) // MAX_WORKERS
+        part_size = len(padded) // max_workers
 
         if (remainder := (part_size % 16)) != 0:  # take chunks that are multiples of 16
-            print(f'Our remainder is: {remainder}')
+            #print(f'Our remainder is: {remainder}')
             part_size -= remainder
 
         full_parts = math.floor( len(padded) // part_size)
@@ -531,11 +533,9 @@ def AES_Encrypt_Parallelized(args, key):
         if remaining_blocks > 0:
             parts.append(padded[ind::])
         
-        bytes_remaining = len(padded) - (part_size * MAX_WORKERS)
-
         start = time.time_ns()
         # map(): Apply a function to an iterable of elements.
-        with ProcessPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        with ProcessPoolExecutor(max_workers=max_workers) as executor:
             futures.extend(executor.submit(aes_encrypt, part, key) for part in parts)
 
             for future in futures:
