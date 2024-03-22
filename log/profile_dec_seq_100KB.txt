@@ -1,0 +1,58 @@
+AES Profiling
+______Decryption_____
+------------------------------------
+CSCI-555L AES-128 ECB Implementation
+------------------------------------
+[OS]: Darwin
+[Cores]: 8
+Namespace(p=False, k=None, infile='eval_files/100000.txt', outfile='dummyoutfile.txt', decrypt=True, encrypt=False)
+[INFO] Generated and saved key to AES.key:
+0x08 0xf7 0x76 0x60 0xda 0xc4 0xcb 0xd8 0xbf 0xa3 0x5b 0x9b 0xed 0x65 0xe6 0x1f 
+bytearray(b'\x08\xf7v`\xda\xc4\xcb\xd8\xbf\xa3[\x9b\xede\xe6\x1f')
+b'08f77660dac4cbd8bfa35b9bed65e61f'
+[INFO]: Non-Parallelized Decryption
+[INFO]: Non-Parallelized AES Decryption took 4.57935 s
+         3278210 function calls (3277168 primitive calls) in 4.740 seconds
+
+   Ordered by: cumulative time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+     39/1    0.000    0.000    4.740    4.740 {built-in method builtins.exec}
+        1    0.000    0.000    4.740    4.740 aestest.py:1(<module>)
+        1    0.026    0.026    4.581    4.581 aesdecrypt.py:558(AES_Decrypt)
+     6250    0.128    0.000    4.554    0.001 aesdecrypt.py:383(aes_decrypt)
+    56250    0.406    0.000    3.145    0.000 aesdecrypt.py:133(inv_mix_cols)
+   900000    2.641    0.000    2.739    0.000 aesdecrypt.py:147(inv_mix_columns_transform)
+    62500    0.311    0.000    0.435    0.000 aesdecrypt.py:123(shift_rows_inv)
+    68750    0.269    0.000    0.328    0.000 aesdecrypt.py:335(extract_key)
+    68750    0.197    0.000    0.236    0.000 aesdecrypt.py:71(xor_2d)
+    62500    0.217    0.000    0.217    0.000 aesdecrypt.py:258(s_box_inv_sub)
+     63/2    0.001    0.000    0.156    0.078 <frozen importlib._bootstrap>:1343(_find_and_load)
+     63/2    0.000    0.000    0.156    0.078 <frozen importlib._bootstrap>:1298(_find_and_load_unlocked)
+     59/2    0.000    0.000    0.155    0.078 <frozen importlib._bootstrap>:905(_load_unlocked)
+     38/2    0.000    0.000    0.155    0.078 <frozen importlib._bootstrap_external>:988(exec_module)
+    147/4    0.000    0.000    0.152    0.038 <frozen importlib._bootstrap>:480(_call_with_frames_removed)
+        1    0.000    0.000    0.152    0.152 aesencrypt.py:1(<module>)
+1264147/1264060    0.140    0.000    0.140    0.000 {built-in method builtins.len}
+        2    0.000    0.000    0.122    0.061 process.py:1(<module>)
+   406/61    0.000    0.000    0.119    0.002 {built-in method builtins.hasattr}
+     16/4    0.000    0.000    0.119    0.030 <frozen importlib._bootstrap>:1384(_handle_fromlist)
+        1    0.000    0.000    0.119    0.119 __init__.py:40(__getattr__)
+   462513    0.102    0.000    0.102    0.000 {method 'to_bytes' of 'int' objects}
+   187500    0.082    0.000    0.082    0.000 aesdecrypt.py:89(rot_word_R)
+        4    0.000    0.000    0.071    0.018 __init__.py:1(<module>)
+        1    0.000    0.000    0.064    0.064 connection.py:1(<module>)
+        1    0.000    0.000    0.054    0.054 tempfile.py:1(<module>)
+     6250    0.031    0.000    0.050    0.000 aesdecrypt.py:368(state_store)
+      5/2    0.000    0.000    0.049    0.025 {built-in method builtins.__import__}
+       59    0.000    0.000    0.046    0.001 <frozen importlib._bootstrap>:806(module_from_spec)
+       19    0.000    0.000    0.044    0.002 <frozen importlib._bootstrap_external>:1286(create_module)
+       19    0.044    0.002    0.044    0.002 {built-in method _imp.create_dynamic}
+       38    0.001    0.000    0.044    0.001 <frozen importlib._bootstrap_external>:1061(get_code)
+        1    0.000    0.000    0.043    0.043 random.py:1(<module>)
+        1    0.000    0.000    0.041    0.041 context.py:1(<module>)
+        1    0.000    0.000    0.038    0.038 hashlib.py:1(<module>)
+        1    0.000    0.000    0.034    0.034 reduction.py:1(<module>)
+       19    0.000    0.000    0.025    0.001 <frozen importlib._bootstrap_external>:1294(exec_module)
+       19    0.025    0.001    0.025    0.001 {built-in method _imp.exec_dynamic}
+       39    0.000    0.000    0.023    0.001 <frozen importlib._boot
