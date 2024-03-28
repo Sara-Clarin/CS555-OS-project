@@ -273,6 +273,8 @@ def mix_cols(state):
 
     return temp
 
+    
+
 def mix_cols_fast(I_row, S_col):
     
     temp = 0x00 
