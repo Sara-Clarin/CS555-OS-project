@@ -179,10 +179,12 @@ def xor_2d(arr1, arr2):
                  Used in key addition
     """
     for i in range(len(arr1)):
-        for j in range(len(arr1[0])):
-            val = arr1[i][j] ^ arr2[i][j]
-            arr1[i][j] = val
-
+        arr1[i] = [ arr1[i][j]^arr2[i][j] for j in range(len(arr1[0]))]
+        
+        #for j in range(len(arr1[0])):
+        #    val = arr1[i][j] ^ arr2[i][j]
+        #    arr1[i][j] = val
+        
     return arr1
 
 
@@ -246,10 +248,11 @@ def shift_rows(state):
     for i in range(1,4,1):
         word = rot_word_L(state[i][0] << 24 | state[i][1] << 16 | state[i][2] << 8 | state[i][3], i)
         converter = word.to_bytes(4, byteorder='big', signed=False)
-        state[i][0] = int(converter[0])
-        state[i][1] = int(converter[1])
-        state[i][2] = int(converter[2])
-        state[i][3] = int(converter[3])
+        #state[i][0] = int(converter[0])
+        #state[i][1] = int(converter[1])
+        #state[i][2] = int(converter[2])
+        #state[i][3] = int(converter[3])
+        state[i] = [ int(converter[x]) for x in range(4)]
 
 
 def mix_cols(state):
@@ -273,10 +276,42 @@ def mix_cols(state):
 
     return temp
 
-    
+def fast_m_cols(state):
+    '''
+    mix columns function, improved over mix_cols to have fewer functions cols
+    goal: increase performance over previous method
+    '''
+    tempstate = [[0x00 for _ in range(4)] for _ in range(4)]
+    temp = 0x00
+
+    for i in range(4):
+        for j in range(4):
+            temp = 0x00
+
+            #for k, stateval in enumerate()
+            curr_col = [state[x][j] for x in range(4)]
+
+            #for k in range(4):
+            for k, stateval in enumerate(curr_col):
+                #curr_col = [state[x][j] for x in range(4)]
+                GF_elem = mix_col_matrix[i][k]
+
+                if GF_elem == 0x01:
+                    temp ^= stateval
+
+                elif GF_elem == 0x02:
+                    temp ^= table_2[int(stateval)]
+
+                else: # GF_elem == 3
+                    temp ^= table_3[int(stateval)]
+
+            tempstate[i][j] = temp
+    return tempstate
 
 def mix_cols_fast(I_row, S_col):
-    
+    '''
+    Lookup-table version of mix_columns transform
+    '''
     temp = 0x00 
     
     for i, stateval in enumerate(S_col):
@@ -284,7 +319,6 @@ def mix_cols_fast(I_row, S_col):
 
         if GF_elem == 0x01:
             temp ^= stateval
-            # continue
 
         elif GF_elem == 0x02:
             temp ^= table_2[int(stateval)]
@@ -478,7 +512,8 @@ def aes_encrypt(pt, key):
 
             """Mix Columns skipped for only round 10"""
             if aes_round != 10:
-                state = mix_cols(state)
+                #state = mix_cols(state)
+                state = fast_m_cols(state)
 
             round_key = extract_key(key_schedule[aes_round])
 
