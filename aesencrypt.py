@@ -15,6 +15,8 @@ import time
 from multiprocessing import Pool, TimeoutError
 import math
 
+MAX_WORKERS = 8
+
 mix_col_matrix = [[0x02, 0x03, 0x01, 0x01],
                    [0x01, 0x02, 0x03, 0x01],
                    [0x01, 0x01, 0x02, 0x03],
@@ -678,6 +680,7 @@ def AES_Encrypt_Parallelized(args, key):
     ciphertext = b''
     encrypted_blocks = []
     futures = []
+    global MAX_WORKERS
     with open(args.infile, 'rb') as infile:
         data = infile.read()
 
@@ -689,9 +692,9 @@ def AES_Encrypt_Parallelized(args, key):
             padded = data
 
         parts = []
-        max_workers = 8
+        print(f'[INFO]: Max workers: {MAX_WORKERS}\r')
         # Loop to create parts
-        part_size = len(padded) // max_workers
+        part_size = len(padded) // MAX_WORKERS
 
         if (remainder := (part_size % 16)) != 0:  # take chunks that are multiples of 16
             #print(f'Our remainder is: {remainder}')
@@ -710,7 +713,7 @@ def AES_Encrypt_Parallelized(args, key):
         
         start = time.time_ns()
         # map(): Apply a function to an iterable of elements.
-        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        with ProcessPoolExecutor(max_workers=MAX_WORKERS) as executor:
             futures.extend(executor.submit(aes_encrypt, part, key) for part in parts)
 
             for future in futures:
