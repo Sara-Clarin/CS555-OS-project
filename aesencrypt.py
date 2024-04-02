@@ -248,12 +248,7 @@ def shift_rows(state):
     for i in range(1,4,1):
         word = rot_word_L(state[i][0] << 24 | state[i][1] << 16 | state[i][2] << 8 | state[i][3], i)
         converter = word.to_bytes(4, byteorder='big', signed=False)
-        #state[i][0] = int(converter[0])
-        #state[i][1] = int(converter[1])
-        #state[i][2] = int(converter[2])
-        #state[i][3] = int(converter[3])
-        state[i] = [ int(converter[x]) for x in range(4)]
-
+        state[i][:] = converter
 
 def mix_cols(state):
     """
