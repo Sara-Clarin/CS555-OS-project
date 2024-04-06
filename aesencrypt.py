@@ -663,7 +663,7 @@ def AES_Encrypt(args, key):
             ciphertext += (aes_encrypt(block, key))
             #print(f'[INFO]: Blocks remaining: {num_blocks - x}')
         end = time.time_ns()
-        print(f'[INFO]: Parallelized AES Encryption took {(end - start) / 1e9} s')
+        print(f'[INFO]: Non-Parallelized AES Encryption took {(end - start) / 1e9} s')
 
     with open(args.outfile, 'wb') as outfile:
         outfile.write(ciphertext)
