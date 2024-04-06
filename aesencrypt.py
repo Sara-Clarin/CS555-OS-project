@@ -647,7 +647,7 @@ def AES_Encrypt(args, key):
     """
     print("[INFO]: Non-Parallelized Encryption")
     ciphertext = b''
-    with open(args.infile, 'rb') as infile:
+    with open(args.inf, 'rb') as infile:
         data = infile.read()
 
         if len(data) % 16 != 0:
@@ -665,7 +665,7 @@ def AES_Encrypt(args, key):
         end = time.time_ns()
         print(f'[INFO]: Non-Parallelized AES Encryption took {(end - start) / 1e9} s')
 
-    with open(args.outfile, 'wb') as outfile:
+    with open(args.outf, 'wb') as outfile:
         outfile.write(ciphertext)
 
 
@@ -681,7 +681,7 @@ def AES_Encrypt_Parallelized(args, key):
     encrypted_blocks = []
     futures = []
     global MAX_WORKERS
-    with open(args.infile, 'rb') as infile:
+    with open(args.inf, 'rb') as infile:
         data = infile.read()
 
         if len(data) % 16 != 0:
@@ -724,5 +724,5 @@ def AES_Encrypt_Parallelized(args, key):
         end = time.time_ns()
 
         print(f'[INFO]: Parallelized AES Encryption took {(end - start) / 1e9} s')
-        with open(args.outfile, 'wb') as outfile:
+        with open(args.outf, 'wb') as outfile:
             outfile.write(ciphertext)

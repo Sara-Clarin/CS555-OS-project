@@ -20,17 +20,17 @@ def arg_printer(args):
 
 
 def arg_checker(args):
-	if args.outfile is None:
+	if args.outf is None:
 		print('[ERROR] Please provide an output file path to continue')
 		exit(-101)
 
 	if args.g is not None:
 		print(f'Generating File of size {args.g}\n')
 		f_name = randfile.main_wrapper(int(args.g))
-		args.infile = f_name
+		args.inf = f_name
 	else:
-		if args.infile:
-			if not os.access(args.infile, os.R_OK):
+		if args.inf:
+			if not os.access(args.inf, os.R_OK):
 				print('[ERROR] Cannot open file for reading')
 				exit(-100)
 		else:
@@ -71,9 +71,9 @@ if __name__ == '__main__':
 	# input file OR generate flags must be set first before defining output
 	gen = parser.add_mutually_exclusive_group(required=True)
 	gen.add_argument('-g', type=int, action='store', help='[Mutual Exclusive Required] Generate input file of <n> bytes')
-	gen.add_argument('infile', nargs='?', default=None, help='[Mutual Exclusive Required] input file')
+	gen.add_argument('-inf', action='store', type=str, default=None, help='[Mutual Exclusive Required] input file')
 
-	parser.add_argument('outfile', nargs='?', default=None, help='[Required] output file')
+	parser.add_argument('-outf', action='store', type=str, default=None, help='[Required] output file')
 
 	mode = parser.add_mutually_exclusive_group(required=True)
 	mode.add_argument('-d', '--decrypt', action='store_true', help='[Mutual Exclusive Required] Decrypt flag')
@@ -82,7 +82,7 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 
 	# Sample output
-	#arg_printer(args)
+	arg_printer(args)
 
 	# Argument checker
 	arg_checker(args)

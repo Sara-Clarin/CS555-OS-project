@@ -656,7 +656,7 @@ def AES_Decrypt(args, key):
     """
     print("[INFO]: Non-Parallelized Decryption")
     plaintext = b''
-    with open(args.infile, 'rb') as infile:
+    with open(args.inf, 'rb') as infile:
         data = infile.read()
 
         num_blocks = int(len(data)/16)
@@ -671,7 +671,7 @@ def AES_Decrypt(args, key):
 
         unpadded = tools.iso_iec_7816_4_unpad(plaintext)
 
-    with open(args.outfile, 'wb') as outfile:
+    with open(args.outf, 'wb') as outfile:
         outfile.write(unpadded)
 
 
@@ -687,7 +687,7 @@ def AES_Decrypt_Parallelized(args, key):
     plaintext = b''
     decrypted_blocks = []
     futures = []
-    with open(args.infile, 'rb') as infile:
+    with open(args.inf, 'rb') as infile:
         data = infile.read()
 
         if len(data) % 16 != 0:
@@ -734,5 +734,5 @@ def AES_Decrypt_Parallelized(args, key):
         plaintext = tools.iso_iec_7816_4_unpad(plaintext)
 
         print(f'[INFO]: Parallelized AES decryption took {(end - start) / 1e9} s')
-        with open(args.outfile, 'wb') as outfile:
+        with open(args.outf, 'wb') as outfile:
             outfile.write(plaintext)
