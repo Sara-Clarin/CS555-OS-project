@@ -667,12 +667,16 @@ def AES_Decrypt(args, key):
             plaintext += (aes_decrypt(block, key))
             #print(f'[INFO]: Blocks remaining: {num_blocks - x}')
         end = time.time_ns()
-        print(f'[INFO]: Non-Parallelized AES Decryption took {(end - start) / 1e9} s')
+
+        total_time = (end - start) / 1e9
+        print(f'[INFO]: Non-Parallelized AES Decryption took {total_time} s')
 
         unpadded = tools.iso_iec_7816_4_unpad(plaintext)
 
     with open(args.outf, 'wb') as outfile:
         outfile.write(unpadded)
+
+    return total_time
 
 
 def AES_Decrypt_Parallelized(args, key):
@@ -687,6 +691,7 @@ def AES_Decrypt_Parallelized(args, key):
     plaintext = b''
     decrypted_blocks = []
     futures = []
+    parts = []
     with open(args.inf, 'rb') as infile:
         data = infile.read()
 
@@ -697,18 +702,22 @@ def AES_Decrypt_Parallelized(args, key):
             num_blocks = int(len(data)/16)
             padded = data
 
-        start = time.time_ns()
-        # map(): Apply a function to an iterable of elements.
-        parts = []
-        print(f'[INFO]: Max workers: {MAX_WORKERS}\r')
+        # Check if user has override MAX_WORKERS
+        if args.w != -1:
+            workers = args.w
+        else:
+            workers = MAX_WORKERS
+
+        print(f'[INFO]: Max workers: {workers}\r')
+
         # Loop to create parts
-        part_size = len(padded) // MAX_WORKERS
+        part_size = len(padded) // workers
 
         if (remainder := (part_size % 16)) != 0:  # take chunks that are multiples of 16
             #print(f'Our remainder is: {remainder}')
             part_size -= remainder
-
-        full_parts = math.floor( len(padded) // part_size)
+    
+        full_parts = math.floor(len(padded) // part_size)
         remaining_blocks = len(padded) - full_parts*part_size
 
         ind = 0
@@ -720,19 +729,22 @@ def AES_Decrypt_Parallelized(args, key):
             parts.append(padded[ind::])
 
         start = time.time_ns()
-
-        with ProcessPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        with ProcessPoolExecutor(max_workers=workers) as executor:
             futures.extend(executor.submit(aes_decrypt, part, key) for part in parts)
 
             for future in futures:
                 decrypted_blocks.append(future.result())
+        end = time.time_ns()
+
+        total_time = (end - start) / 1e9
 
         # Concatenate the encrypted blocks in the original order
         plaintext = b''.join(decrypted_blocks)
-        end = time.time_ns()
 
         plaintext = tools.iso_iec_7816_4_unpad(plaintext)
 
-        print(f'[INFO]: Parallelized AES decryption took {(end - start) / 1e9} s')
+        print(f'[INFO]: Parallelized AES decryption took {total_time} s')
         with open(args.outf, 'wb') as outfile:
             outfile.write(plaintext)
+
+        return total_time
