@@ -14,7 +14,7 @@ import tools
 import sys
 import randfile
 
-
+TIME_TRIALS = []
 def arg_printer(args):
 	print(args)
 
@@ -66,6 +66,7 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser(prog='aestest.py', description='Perform AES-128 ECB Encryption / Decryption')
 	parser.add_argument('-p', action='store_true', help='[Optional] Enable parallelization flag')
 	parser.add_argument('-k', action='store', help='[Optional] Key file, omit to generate key')
+	parser.add_argument('-w', type=int, default=-1, action='store', help='[Optional] Override MAX Workers')
 	parser.add_argument('-i', type=int, default=1, action='store', help='[Optional] Iterations. Default is 1')
 
 	# input file OR generate flags must be set first before defining output
@@ -99,11 +100,21 @@ if __name__ == '__main__':
 	for _ in range(args.i):
 		if args.p:
 			if args.encrypt:
-				aesencrypt.AES_Encrypt_Parallelized(args, key)
+				time = aesencrypt.AES_Encrypt_Parallelized(args, key)
 			else:
-				aesdecrypt.AES_Decrypt_Parallelized(args, key)
+				time = aesdecrypt.AES_Decrypt_Parallelized(args, key)
 		else:
 			if args.encrypt:
-				aesencrypt.AES_Encrypt(args, key)
+				time = aesencrypt.AES_Encrypt(args, key)
 			else:
-				aesdecrypt.AES_Decrypt(args, key)
+				time = aesdecrypt.AES_Decrypt(args, key)
+
+		# Obtain times from individual runs
+		TIME_TRIALS.append(time)
+
+	print()
+	print("           AES Statistics           ")
+	print("------------------------------------")
+	print(f'Number of Trials: {len(TIME_TRIALS)}')
+	print(f'Average Time: {sum(TIME_TRIALS)/len(TIME_TRIALS)}')
+	print("------------------------------------")
