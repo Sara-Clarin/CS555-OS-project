@@ -690,7 +690,10 @@ def AES_Encrypt_Parallelized(args, key):
         if (remainder := (part_size % 16)) != 0:  # take chunks that are multiples of 16
             part_size -= remainder
 
-        full_parts = math.floor(len(padded) // part_size)
+        if part_size <= 0:
+            full_parts = 1
+        else:
+            full_parts = math.floor(len(padded) // part_size)
         remaining_blocks = len(padded) - full_parts*part_size
 
         ind = 0
