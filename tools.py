@@ -40,6 +40,7 @@ def print_key_hex(raw_key):
     Converts bytes object to hex
     '''
     print(binascii.hexlify(raw_key))
+    
 
 def debug_print_arr_2dhex_1line(hex_array):
     """

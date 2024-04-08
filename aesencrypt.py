@@ -288,9 +288,7 @@ def fast_m_cols(state):
             #for k, stateval in enumerate()
             curr_col = [state[x][j] for x in range(4)]
 
-            #for k in range(4):
             for k, stateval in enumerate(curr_col):
-                #curr_col = [state[x][j] for x in range(4)]
                 GF_elem = mix_col_matrix[i][k]
 
                 if GF_elem == 0x01:
@@ -335,16 +333,11 @@ def mix_columns_transform(I_row, S_Col):
     """
     temp = 0x00
 
-    #print(f'mix_col_matrix[I_row]: {mix_col_matrix[I_row]}')
-    #print(f'S_col: {S_Col}')
-    #print(f'Len of mix_col_matrix[I_row]: {len(mix_col_matrix[I_row])}')
-
     """Iterates over current Mix Col row and state array column to perform matrix multiplication"""
     for i in range(len(mix_col_matrix[I_row])):  # maybe can hardcode this to 4
 
         element = mix_col_matrix[I_row][i]
 
-        #print(f"mix_col_matrix[I_row][i]: {mix_col_matrix[I_row][i]}")
 
         """
         Determine if you are multiplying either by 0x02, 0x03, or 0x01
@@ -387,17 +380,11 @@ def key_expansion(aes_key):
         """If a words has been made - rotate, substitute, and use round constant for XOR"""
         if x % 4 == 0:
             temp = rot_word_L(temp, 1)
-            # print(f'[Debug] After RotWord(): 0x{temp:02x}')
             temp = sub_word(temp)
-            # print(f'[Debug] After SubWord(): 0x{temp:02x}')
-            # print(f'[Debug] Rcon: 0x{r_const[r_const_ptr]:02x}')
             temp ^= r_const[r_const_ptr]
             r_const_ptr += 1
 
-            # print(f'[Debug] After XOR with Rcon: 0x{temp:02x}')
-
         temp ^= w[x - 4]
-        # print(f'[Debug] After XOR with w[i-Nk]: 0x{temp:02x}')
         w.append(temp)
 
     key_out = [
@@ -489,8 +476,6 @@ def aes_encrypt(pt, key):
 
     """for-loop to iterate over all 16-byte plaintext blocks"""
     for i in range(num_blocks):
-        #if i % 100000 == 0:
-            #print(f"PID: {os.getpid()} Processed {i} out of {num_blocks} blocks")
         state = [[0x00, 0x00, 0x00, 0x00], [0x00, 0x00, 0x00, 0x00], [0x00, 0x00, 0x00, 0x00], [0x00, 0x00, 0x00, 0x00]]
 
         """This function will turn the 1D plaintext into multiple 2D state arrays"""
@@ -509,7 +494,6 @@ def aes_encrypt(pt, key):
 
             """Mix Columns skipped for only round 10"""
             if aes_round != 10:
-                #state = mix_cols(state)
                 state = fast_m_cols(state)
 
             round_key = extract_key(key_schedule[aes_round])
@@ -581,7 +565,6 @@ def aes_encrypt_single_block(pt, key):
     ciphertext = bytearray([])
     curr_round = 0
 
-    #print(f"PID: {os.getpid()} Started")
     key_schedule = key
 
     """for-loop to iterate over all 16-byte plaintext blocks"""
@@ -614,8 +597,6 @@ def aes_encrypt_single_block(pt, key):
 
     """Update current cipher round for indexing"""
     #curr_round += 1
-
-    #print(f"PID: {os.getpid()} Ended\r")
     return ciphertext
 
 
@@ -707,7 +688,6 @@ def AES_Encrypt_Parallelized(args, key):
         part_size = len(padded) // workers
 
         if (remainder := (part_size % 16)) != 0:  # take chunks that are multiples of 16
-            # print(f'Our remainder is: {remainder}')
             part_size -= remainder
 
         full_parts = math.floor(len(padded) // part_size)
