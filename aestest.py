@@ -13,6 +13,7 @@ import platform
 import tools
 import sys
 import randfile
+import statistics
 
 TIME_TRIALS = []
 def arg_printer(args):
@@ -117,4 +118,5 @@ if __name__ == '__main__':
 	print("------------------------------------")
 	print(f'Number of Trials: {len(TIME_TRIALS)}')
 	print(f'Average Time: {sum(TIME_TRIALS)/len(TIME_TRIALS)}')
+	print(f'Variance: {statistics.variance(TIME_TRIALS)}')
 	print("------------------------------------")
