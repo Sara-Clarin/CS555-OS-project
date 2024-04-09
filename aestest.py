@@ -102,8 +102,7 @@ if __name__ == '__main__':
 
 	# input file OR generate flags must be set first before defining output
 	gen = parser.add_mutually_exclusive_group(required=True)
-	gen.add_argument('-g', type=int, action='store',
-	                 help='[Mutual Exclusive Required] Generate input file of <n> bytes')
+	gen.add_argument('-g', type=int, action='store', help='[Mutual Exclusive Required] Generate input file of <n> bytes')
 	gen.add_argument('-inf', action='store', type=str, default=None, help='[Mutual Exclusive Required] input file')
 
 	parser.add_argument('-outf', action='store', type=str, default=None, help='[Required] output file')
@@ -155,6 +154,6 @@ if __name__ == '__main__':
 	logger.info(f'Number of Trials: {len(TIME_TRIALS)}')
 	logger.info(f'Time Splits: {TIME_TRIALS}')
 	logger.info(f'Average Time: {sum(TIME_TRIALS) / len(TIME_TRIALS)}')
-	logger.info(f'Variance: {statistics.variance(TIME_TRIALS)}')
+	logger.info(f'Variance: {statistics.variance(TIME_TRIALS)}')  # NOTE: REQUIRES > 1 ITERATIONS
 	logger.info(f'Coefficient of Variation: {Coefficient_of_Variation}')
 	logger.info("------------------------------------")
