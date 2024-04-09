@@ -14,27 +14,41 @@ import tools
 import sys
 import randfile
 import statistics
+import numpy as np
+import logging
+from datetime import datetime
+
+# Coefficient of Variance
+cv = lambda x: np.std(x, ddof=1) / np.mean(x) * 100
+
+logger: logging = None
 
 TIME_TRIALS = []
+
 def arg_printer(args):
+	logger.info(args)
 	print(args)
 
 
 def arg_checker(args):
 	if args.outf is None:
+		logger.error('[ERROR] Please provide an output file path to continue')
 		print('[ERROR] Please provide an output file path to continue')
 		exit(-101)
 
 	if args.g is not None:
+		logger.info(f'Generating File of size {args.g}\n')
 		print(f'Generating File of size {args.g}\n')
 		f_name = randfile.main_wrapper(int(args.g))
 		args.inf = f_name
 	else:
 		if args.inf:
 			if not os.access(args.inf, os.R_OK):
+				logger.error('[ERROR] Cannot open file for reading')
 				print('[ERROR] Cannot open file for reading')
 				exit(-100)
 		else:
+			logger.error('[ERROR] Cannot open file for reading')
 			print('[ERROR] Please provide an input file path to continue')
 			exit(-101)
 
@@ -48,12 +62,28 @@ def key_check(args):
 	else:
 		# Generate new random 16-byte key upon runtime
 		key = os.urandom(16)
+		logger.info(f'[INFO] Generated and saved key to AES.key:\r')
 		print(f'[INFO] Generated and saved key to AES.key:\r')
 		tools.debug_print_arr_hex_1line(key)
 		with open('AES.key', 'wb') as kf:
 			kf.write(key)
 
 	return key
+
+
+def set_log(a):
+	global logger
+	now = datetime.now()
+	dt_string = now.strftime("%m%d%Y_%H%M%S")
+	logger = logging.getLogger(__name__)
+
+	# Create a log file in eval_files with MMDDYY_HHMMSS_outf.log
+	if "Win" in platform.system():
+		index = a.outf.rfind('/')
+		logging.basicConfig(filename=f'eval_files\\{dt_string}_{a.outf[index+1::]}.log', encoding='utf-8', level=logging.DEBUG)
+	if "Darwin" in platform.system():
+		index = a.outf.rfind('\\')
+		logging.basicConfig(filename=f'eval_files/{dt_string}_{a.outf[index+1::]}.log', encoding='utf-8', level=logging.DEBUG)
 
 
 if __name__ == '__main__':
@@ -72,7 +102,8 @@ if __name__ == '__main__':
 
 	# input file OR generate flags must be set first before defining output
 	gen = parser.add_mutually_exclusive_group(required=True)
-	gen.add_argument('-g', type=int, action='store', help='[Mutual Exclusive Required] Generate input file of <n> bytes')
+	gen.add_argument('-g', type=int, action='store',
+	                 help='[Mutual Exclusive Required] Generate input file of <n> bytes')
 	gen.add_argument('-inf', action='store', type=str, default=None, help='[Mutual Exclusive Required] input file')
 
 	parser.add_argument('-outf', action='store', type=str, default=None, help='[Required] output file')
@@ -82,6 +113,9 @@ if __name__ == '__main__':
 	mode.add_argument('-e', '--encrypt', action='store_true', help='[Mutual Exclusive Required] Encrypt flag')
 
 	args = parser.parse_args()
+
+	# Set logger
+	set_log(args)
 
 	# Sample output
 	arg_printer(args)
@@ -113,10 +147,14 @@ if __name__ == '__main__':
 		# Obtain times from individual runs
 		TIME_TRIALS.append(time)
 
+	Coefficient_of_Variation = cv(TIME_TRIALS)
+
 	print()
-	print("           AES Statistics           ")
-	print("------------------------------------")
-	print(f'Number of Trials: {len(TIME_TRIALS)}')
-	print(f'Average Time: {sum(TIME_TRIALS)/len(TIME_TRIALS)}')
-	print(f'Variance: {statistics.variance(TIME_TRIALS)}')
-	print("------------------------------------")
+	logger.info("           AES Statistics           ")
+	logger.info("------------------------------------")
+	logger.info(f'Number of Trials: {len(TIME_TRIALS)}')
+	logger.info(f'Time Splits: {TIME_TRIALS}')
+	logger.info(f'Average Time: {sum(TIME_TRIALS) / len(TIME_TRIALS)}')
+	logger.info(f'Variance: {statistics.variance(TIME_TRIALS)}')
+	logger.info(f'Coefficient of Variation: {Coefficient_of_Variation}')
+	logger.info("------------------------------------")
