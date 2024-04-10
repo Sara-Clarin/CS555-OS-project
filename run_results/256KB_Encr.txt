@@ -1,0 +1,18 @@
+------------------------------------
+CSCI-555L AES-128 ECB Implementation
+------------------------------------
+[OS]: Darwin
+[Cores]: 8
+Namespace(p=False, k='AES.key', w=-1, i=10, g=262144, inf=None, outf='eval_files/nonParallel/encrypt/256KB.enc', decrypt=False, encrypt=True)
+Generating File of size 262144
+
+Generating random text file of length 262144 bytes
+
+b'414553544553544b45594b45594b4559'
+
+           AES Statistics           
+------------------------------------
+Number of Trials: 10
+Average Time: 198.2264668
+Variance: 331748.61319207883
+------------------------------------
