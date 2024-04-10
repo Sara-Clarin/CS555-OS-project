@@ -82,7 +82,7 @@ def set_log(a):
 		index = a.outf.rfind('/')
 		logging.basicConfig(filename=f'eval_files\\{dt_string}_{a.outf[index+1::]}.log', encoding='utf-8', level=logging.DEBUG)
 	if "Darwin" in platform.system():
-		index = a.outf.rfind('\\')
+		index = a.outf.rfind('/')
 		logging.basicConfig(filename=f'eval_files/{dt_string}_{a.outf[index+1::]}.log', encoding='utf-8', level=logging.DEBUG)
 
 
