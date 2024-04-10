@@ -628,6 +628,7 @@ def AES_Encrypt(args, key):
     """
     print("[INFO]: Non-Parallelized Encryption")
     ciphertext = b''
+    encrypted_blocks = []
     with open(args.inf, 'rb') as infile:
         data = infile.read()
 
@@ -641,12 +642,15 @@ def AES_Encrypt(args, key):
         start = time.time_ns()
         for x in range(num_blocks):
             block = padded[x*16: (x*16)+16]
-            ciphertext += (aes_encrypt(block, key))
+            encrypted_blocks.append(aes_encrypt(block, key))
             #print(f'[INFO]: Blocks remaining: {num_blocks - x}')
         end = time.time_ns()
         total_time = (end - start) / 1e9
         print(f'[INFO]: Non-Parallelized AES Encryption took {total_time} s')
 
+    # combine into single bytestream
+    ciphertext = b''.join(encrypted_blocks)
+    
     with open(args.outf, 'wb') as outfile:
         outfile.write(ciphertext)
 

@@ -1,0 +1,59 @@
+---Encrypt Non-Parallel---
+python aestest.py -e -g 16 -i 100 -k AES.key -outf eval_files/nonParallel/encrypt/16b.enc
+python aestest.py -e -g 1024 -i 10 -k AES.key -outf eval_files/nonParallel/encrypt/1KB.enc
+python aestest.py -e -g 10240 -i 10 -k AES.key -outf eval_files/nonParallel/encrypt/10KB.enc
+python aestest.py -e -g 51200 -i 10 -k AES.key -outf eval_files/nonParallel/encrypt/50KB.enc
+python aestest.py -e -g 102400 -i 10 -k AES.key -outf eval_files/nonParallel/encrypt/100KB.enc
+python aestest.py -e -g 262144 -i 10 -k AES.key -outf eval_files/nonParallel/encrypt/256KB.enc
+python aestest.py -e -g 524288 -i 10 -k AES.key -outf eval_files/nonParallel/encrypt/512KB.enc
+python aestest.py -e -g 1048576 -i 10 -k AES.key -outf eval_files/nonParallel/encrypt/1MB.enc
+python aestest.py -e -g 10485760 -i 10 -k AES.key -outf eval_files/nonParallel/encrypt/10MB.enc
+python aestest.py -e -g 52428800 -i 10 -k AES.key -outf eval_files/nonParallel/encrypt/50MB.enc
+python aestest.py -e -g 104857600 -i 10 -k AES.key -outf eval_files/nonParallel/encrypt/100MB.enc
+python aestest.py -e -g 268435456 -i 10 -k AES.key -outf eval_files/nonParallel/encrypt/256MB.enc
+python aestest.py -e -g 536870912 -i 10 -k AES.key -outf eval_files/nonParallel/encrypt/512MB.enc
+
+---Decrypt Non-Parallel---
+python aestest.py -d -i 100 -k AES.key -inf eval_files/nonParallel/encrypt/16b.enc -outf eval_files/nonParallel/decrypt/16b_pt.txt
+python aestest.py -d -i 10 -k AES.key -inf eval_files/nonParallel/encrypt/1KB.enc -outf eval_files/nonParallel/decrypt/1KB_pt.txt
+python aestest.py -d -i 10 -k AES.key -inf eval_files/nonParallel/encrypt/10KB.enc -outf eval_files/nonParallel/decrypt/10KB_pt.txt
+python aestest.py -d -i 10 -k AES.key -inf eval_files/nonParallel/encrypt/50KB.enc -outf eval_files/nonParallel/decrypt/50KB_pt.txt
+python aestest.py -d -i 10 -k AES.key -inf eval_files/nonParallel/encrypt/100KB.enc -outf eval_files/nonParallel/decrypt/100KB_pt.txt
+python aestest.py -d -i 10 -k AES.key -inf eval_files/nonParallel/encrypt/256KB.enc -outf eval_files/nonParallel/decrypt/256KB_pt.txt
+python aestest.py -d -i 10 -k AES.key -inf eval_files/nonParallel/encrypt/512KB.enc -outf eval_files/nonParallel/decrypt/512KB_pt.txt
+python aestest.py -d -i 10 -k AES.key -inf eval_files/nonParallel/encrypt/1MB.enc -outf eval_files/nonParallel/decrypt/1MB_pt.txt
+python aestest.py -d -i 10 -k AES.key -inf eval_files/nonParallel/encrypt/10MB.enc -outf eval_files/nonParallel/decrypt/10MB_pt.txt
+python aestest.py -d -i 10 -k AES.key -inf eval_files/nonParallel/encrypt/50MB.enc -outf eval_files/nonParallel/decrypt/50MB_pt.txt
+python aestest.py -d -i 10 -k AES.key -inf eval_files/nonParallel/encrypt/100MB.enc -outf eval_files/nonParallel/decrypt/100MB_pt.txt
+python aestest.py -d -i 10 -k AES.key -inf eval_files/nonParallel/encrypt/256MB.enc -outf eval_files/nonParallel/decrypt/256MB_pt.txt
+python aestest.py -d -i 10 -k AES.key -inf eval_files/nonParallel/encrypt/512MB.enc -outf eval_files/nonParallel/decrypt/512MB_pt.txt
+
+---Encrypt Parallel---
+python aestest.py -e -p -w <n> -g 1024 -i 10 -k AES.key -outf eval_files/parallel/encrypt/1KB.enc
+python aestest.py -e -p -w <n> -g 10240 -i 10 -k AES.key -outf eval_files/parallel/encrypt/10KB.enc
+python aestest.py -e -p -w <n> -g 51200 -i 10 -k AES.key -outf eval_files/parallel/encrypt/50KB.enc
+python aestest.py -e -p -w <n> -g 102400 -i 10 -k AES.key -outf eval_files/parallel/encrypt/100KB.enc
+python aestest.py -e -p -w <n> -g 262144 -i 10 -k AES.key -outf eval_files/parallel/encrypt/256KB.enc
+python aestest.py -e -p -w <n> -g 524288 -i 10 -k AES.key -outf eval_files/parallel/encrypt/512KB.enc
+python aestest.py -e -p -w <n> -g 1048576 -i 10 -k AES.key -outf eval_files/parallel/encrypt/1MB.enc
+python aestest.py -e -p -w <n> -g 10485760 -i 10 -k AES.key -outf eval_files/parallel/encrypt/10MB.enc
+python aestest.py -e -p -w <n> -g 52428800 -i 10 -k AES.key -outf eval_files/parallel/encrypt/50MB.enc
+python aestest.py -e -p -w <n> -g 104857600 -i 10 -k AES.key -outf eval_files/parallel/encrypt/100MB.enc
+python aestest.py -e -p -w <n> -g 268435456 -i 10 -k AES.key -outf eval_files/parallel/encrypt/256MB.enc
+python aestest.py -e -p -w <n> -g 536870912 -i 10 -k AES.key -outf eval_files/parallel/encrypt/512MB.enc
+python aestest.py -e -p -w <n> -g 1073741824 -i 10 -k AES.key -outf eval_files/parallel/encrypt/1GB.enc
+
+---Decrypt Parallel---
+python aestest.py -e -p -w <n> -i 10 -k AES.key -inf eval_files/parallel/encrypt/1KB.enc -outf eval_files/parallel/decrypt/1KB_pt.txt
+python aestest.py -e -p -w <n> -i 10 -k AES.key -inf eval_files/parallel/encrypt/10KB.enc -outf eval_files/parallel/decrypt/10KB_pt.txt
+python aestest.py -e -p -w <n> -i 10 -k AES.key -inf eval_files/parallel/encrypt/50KB.enc -outf eval_files/parallel/decrypt/50KB_pt.txt
+python aestest.py -e -p -w <n> -i 10 -k AES.key -inf eval_files/parallel/encrypt/100KB.enc -outf eval_files/parallel/decrypt/100KB_pt.txt
+python aestest.py -e -p -w <n> -i 10 -k AES.key -inf eval_files/parallel/encrypt/256KB.enc -outf eval_files/parallel/decrypt/256KB_pt.txt
+python aestest.py -e -p -w <n> -i 10 -k AES.key -inf eval_files/parallel/encrypt/512KB.enc -outf eval_files/parallel/decrypt/512KB_pt.txt
+python aestest.py -e -p -w <n> -i 10 -k AES.key -inf eval_files/parallel/encrypt/1MB.enc -outf eval_files/parallel/decrypt/1MB_pt.txt
+python aestest.py -e -p -w <n> -i 10 -k AES.key -inf eval_files/parallel/encrypt/10MB.enc -outf eval_files/parallel/decrypt/10MB_pt.txt
+python aestest.py -e -p -w <n> -i 10 -k AES.key -inf eval_files/parallel/encrypt/50MB.enc -outf eval_files/parallel/decrypt/50MB_pt.txt
+python aestest.py -e -p -w <n> -i 10 -k AES.key -inf eval_files/parallel/encrypt/100MB.enc -outf eval_files/parallel/decrypt/100MB_pt.txt
+python aestest.py -e -p -w <n> -i 10 -k AES.key -inf eval_files/parallel/encrypt/256MB.enc -outf eval_files/parallel/decrypt/256MB_pt.txt
+python aestest.py -e -p -w <n> -i 10 -k AES.key -inf eval_files/parallel/encrypt/512MB.enc -outf eval_files/parallel/decrypt/512MB_pt.txt
+python aestest.py -e -p -w <n> -i 10 -k AES.key -inf eval_files/parallel/encrypt/1GB.enc -outf eval_files/parallel/decrypt/1GB_pt.txt
