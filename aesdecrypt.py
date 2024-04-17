@@ -591,13 +591,14 @@ def aes_dec_parallel( padded, key):
     Description: Perform Parallelized AES Decryption
     """
     global MAX_WORKERS
-    print("[INFO]: Parallelized Decryption")
+    #print("[INFO]: Parallelized Decryption")
     plaintext = b''
     decrypted_blocks = []
     futures = []
     
     parts = []
-    print(f'[INFO]: Max workers: {MAX_WORKERS}\r')
+    #
+    # print(f'[INFO]: Max workers: {MAX_WORKERS}\r')
     # Loop to create parts
     part_size = len(padded) // MAX_WORKERS
 
@@ -630,7 +631,7 @@ def aes_dec_parallel( padded, key):
 
     plaintext = tools.iso_iec_7816_4_unpad(plaintext)
 
-    print(f'[INFO]: Parallelized AES decryption took {(end - start) / 1e9} s')
+    #print(f'[INFO]: Parallelized AES decryption took {(end - start) / 1e9} s')
     
 def aes_dec_main(ct, key):
     """
@@ -654,7 +655,7 @@ def AES_Decrypt(args, key):
     Output :     None
     Description: Perform Non-Parallelized AES Decryption
     """
-    print("[INFO]: Non-Parallelized Decryption")
+    #print("[INFO]: Non-Parallelized Decryption")
     plaintext = b''
     decrypted_blocks = []
     with open(args.inf, 'rb') as infile:
@@ -690,7 +691,7 @@ def AES_Decrypt_Parallelized(args, key):
     Description: Perform Parallelized AES Decryption
     """
     global MAX_WORKERS
-    print("[INFO]: Parallelized Decryption")
+    #print("[INFO]: Parallelized Decryption")
     plaintext = b''
     decrypted_blocks = []
     futures = []
@@ -711,7 +712,7 @@ def AES_Decrypt_Parallelized(args, key):
         else:
             workers = MAX_WORKERS
 
-        print(f'[INFO]: Max workers: {workers}\r')
+        #print(f'[INFO]: Max workers: {workers}\r')
 
         # Loop to create parts
         part_size = len(padded) // workers
@@ -748,7 +749,7 @@ def AES_Decrypt_Parallelized(args, key):
 
         plaintext = tools.iso_iec_7816_4_unpad(plaintext)
 
-        print(f'[INFO]: Parallelized AES decryption took {total_time} s')
+        #print(f'[INFO]: Parallelized AES decryption took {total_time} s')
         with open(args.outf, 'wb') as outfile:
             outfile.write(plaintext)
 

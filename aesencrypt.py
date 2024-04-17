@@ -421,6 +421,8 @@ def extract_key(key):
     """
     byte_arr = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
 
+    #print(f'Key in extract_key: {key}')
+
     for i in range(4):
         converter = key[i].to_bytes(4, byteorder='big', signed=False)
         byte_arr[0][i] = int(converter[0])
@@ -508,7 +510,7 @@ def aes_encrypt(pt, key):
 
     return ciphertext
 
-def aes_enc_parallel( padded, key):
+def aes_enc_parallel( padded, key, chunksize):
     """
     Function :   AES_Encrypt_Parallelized
     Parameters : padded plaintext string, bytestring key
@@ -626,7 +628,7 @@ def AES_Encrypt(args, key):
     Output :     None
     Description: Perform Non-Parallelized AES Encryption
     """
-    print("[INFO]: Non-Parallelized Encryption")
+    #print("[INFO]: Non-Parallelized Encryption")
     ciphertext = b''
     encrypted_blocks = []
     with open(args.inf, 'rb') as infile:
@@ -646,12 +648,12 @@ def AES_Encrypt(args, key):
             #print(f'[INFO]: Blocks remaining: {num_blocks - x}')
         end = time.time_ns()
         total_time = (end - start) / 1e9
-        print(f'[INFO]: Non-Parallelized AES Encryption took {total_time} s')
+        #print(f'[INFO]: Non-Parallelized AES Encryption took {total_time} s')
 
     # combine into single bytestream
     ciphertext = b''.join(encrypted_blocks)
     
-    with open(args.outf, 'wb') as outfile:
+    with open(args.outf, 'wb+') as outfile:
         outfile.write(ciphertext)
 
     return total_time
@@ -664,7 +666,7 @@ def AES_Encrypt_Parallelized(args, key):
     Output :     None
     Description: Perform Parallelized AES Encryption
     """
-    print("[INFO]: Parallelized Encryption")
+    #print("[INFO]: Parallelized Encryption")
     ciphertext = b''
     encrypted_blocks = []
     futures = []
@@ -686,7 +688,7 @@ def AES_Encrypt_Parallelized(args, key):
         else:
             workers = MAX_WORKERS
 
-        print(f'[INFO]: Max workers: {workers}\r')
+        #print(f'[INFO]: Max workers: {workers}\r')
 
         # Loop to create parts
         part_size = len(padded) // workers
@@ -721,8 +723,90 @@ def AES_Encrypt_Parallelized(args, key):
         end = time.time_ns()
 
         total_time = (end - start) / 1e9
-        print(f'[INFO]: Parallelized AES Encryption took {total_time} s')
-        with open(args.outf, 'wb') as outfile:
+        #print(f'[INFO]: Parallelized AES Encryption took {total_time} s')
+        with open(args.outf, 'wb+') as outfile:
             outfile.write(ciphertext)
 
+        return total_time
+    
+def encryptor(arguments):
+    return aes_encrypt(*arguments)
+
+def AES_Enc_Parallel_chunksize(args, key):
+    """
+    Function :   AES_Encrypt_Parallelized
+    Parameters : program arguments, key schedule array
+    Output :     None
+    Description: Perform Parallelized AES Encryption
+    """
+    #print("[INFO]: Parallelized Encryption")
+    ciphertext = b''
+    encrypted_blocks = []
+    futures = []
+    parts = []
+
+    print(f'Key in main func is: {key}')
+
+
+    global MAX_WORKERS
+    with open(args.inf, 'rb') as infile:
+        data = infile.read()
+
+        if len(data) % 16 != 0:
+            padded = tools.iso_iec_7816_4_pad(data)
+            num_blocks = int(len(padded)/16)
+        else:
+            num_blocks = int(len(data)/16)
+            padded = data
+
+        # Check if user has override MAX_WORKERS
+        if args.w != -1:
+            workers = args.w
+        else:
+            workers = MAX_WORKERS
+
+        #print(f'[INFO]: Max workers: {workers}\r')
+        chunkSize = args.c
+
+        # TODO: make a list of blocks, 16 bytes each
+        blocks = []
+
+        # Loop to create blocks
+        for x in range(num_blocks):
+            block = padded[x*16: (x*16)+16]
+            blocks.append(block)
+
+        print(f'Padded output:')
+        #print(blocks)
+
+
+        print(f'Chunksize: is {chunkSize} blocks per process')
+        arguments = [(block, key) for block in blocks]
+
+        start = time.time_ns()
+        # map(): Apply a function to an iterable of elements.
+        with ProcessPoolExecutor(max_workers=workers) as executor:
+            #futures.extend(executor.submit(aes_encrypt, blocks, key, chunksize=chunkSize))
+            #futures.extend(executor.map(aes_encrypt, block, key, chunksize=chunkSize) for block in blocks)
+            #for result in (executor.map(aes_encrypt, block, key, chunksize=chunkSize) for block in blocks):
+                #print(f'Result: {result}')
+                #futures.extend(result)
+            for result in executor.map(encryptor, arguments ):
+                #print(result)
+                encrypted_blocks.append(result)
+                
+            #for future in futures: # try as_completed(result)
+                #encrypted_blocks.append(future)
+                #print(list(future))
+
+        # Concatenate the encrypted blocks in the original order
+        ciphertext = b''.join(encrypted_blocks)
+        end = time.time_ns()
+
+        total_time = (end - start) / 1e9
+        #print(f'[INFO]: Parallelized AES Encryption took {total_time} s')
+        with open(args.outf, 'wb+') as outfile:
+            outfile.write(ciphertext)
+
+        #print(f'Ciphertext: {ciphertext}')
         return total_time
