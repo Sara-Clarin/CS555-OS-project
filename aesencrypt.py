@@ -786,11 +786,7 @@ def AES_Enc_Parallel_chunksize(args, key):
         start = time.time_ns()
         # map(): Apply a function to an iterable of elements.
         with ProcessPoolExecutor(max_workers=workers) as executor:
-            #futures.extend(executor.submit(aes_encrypt, blocks, key, chunksize=chunkSize))
-            #futures.extend(executor.map(aes_encrypt, block, key, chunksize=chunkSize) for block in blocks)
-            #for result in (executor.map(aes_encrypt, block, key, chunksize=chunkSize) for block in blocks):
-                #print(f'Result: {result}')
-                #futures.extend(result)
+           
             for result in executor.map(encryptor, arguments ):
                 #print(result)
                 encrypted_blocks.append(result)

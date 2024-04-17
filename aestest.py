@@ -144,6 +144,7 @@ if __name__ == '__main__':
 	for _ in range(args.i):
 		if args.p:
 			if args.c:
+				print("-------running chunksize test--------")
 				time = aesencrypt.AES_Enc_Parallel_chunksize(args, key)
 			elif args.encrypt:
 				time = aesencrypt.AES_Encrypt_Parallelized(args, key)
