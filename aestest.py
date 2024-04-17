@@ -80,10 +80,10 @@ def set_log(a):
 	# Create a log file in eval_files with MMDDYY_HHMMSS_outf.log
 	if "Win" in platform.system():
 		index = a.outf.rfind('/')
-		logging.basicConfig(filename=f'eval_files\\{dt_string}_{a.outf[index+1::]}.log', encoding='utf-8', level=logging.DEBUG)
+		logging.basicConfig(filename=f'{a.outf}_{dt_string}.log', encoding='utf-8', level=logging.DEBUG)
 	if "Darwin" in platform.system():
-		index = a.outf.rfind('\\')
-		logging.basicConfig(filename=f'eval_files/{dt_string}_{a.outf[index+1::]}.log', encoding='utf-8', level=logging.DEBUG)
+		index = a.outf.rfind('/')
+		logging.basicConfig(filename=f'{a.outf}_{dt_string}.log', encoding='utf-8', level=logging.DEBUG)
 
 
 if __name__ == '__main__':
