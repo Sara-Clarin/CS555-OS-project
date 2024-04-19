@@ -754,3 +754,62 @@ def AES_Decrypt_Parallelized(args, key):
             outfile.write(plaintext)
 
         return total_time
+    
+def decryptor(arguments):
+    return aes_decrypt(*arguments)
+
+def AES_Dec_Parallel_chunksize(args, key):
+    """
+    Function :   AES_Encrypt_Parallelized
+    Parameters : program arguments, key schedule array
+    Output :     None
+    Description: Perform Parallelized AES Encryption
+    """
+    ciphertext = b''
+    encrypted_blocks = []
+
+    global MAX_WORKERS
+    with open(args.inf, 'rb') as infile:
+        data = infile.read()
+
+        if len(data) % 16 != 0:
+            padded = tools.iso_iec_7816_4_pad(data)
+            num_blocks = int(len(padded)/16)
+        else:
+            num_blocks = int(len(data)/16)
+            padded = data
+
+        # Check if user has override MAX_WORKERS
+        if args.w != -1:
+            workers = args.w
+        else:
+            workers = MAX_WORKERS
+
+        # SET CHUNKSIZE (number of blocks per process at a time)
+        chunkSize = args.c
+
+        blocks = []
+        for x in range(num_blocks):
+            block = padded[x*16: (x*16)+16]
+            blocks.append(block)
+
+        
+        print(f'Chunksize: is {chunkSize} blocks per process')
+        arguments = [(block, key) for block in blocks]
+
+        start = time.time_ns()
+        # map(): Apply a function to an iterable of elements.
+        with ProcessPoolExecutor(max_workers=workers) as executor:
+            for result in executor.map(decryptor, arguments, chunksize=chunkSize ):
+                encrypted_blocks.append(result) 
+            
+
+        # Concatenate the encrypted blocks in the original order
+        ciphertext = b''.join(encrypted_blocks)
+        end = time.time_ns()
+
+        total_time = (end - start) / 1e9
+        with open(args.outf, 'wb+') as outfile:
+            outfile.write(ciphertext)
+
+        return total_time

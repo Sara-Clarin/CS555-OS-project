@@ -140,15 +140,23 @@ if __name__ == '__main__':
 	key = tools.key_expansion(pre_key)
 
 	for _ in range(args.i):
-		if args.p:
-			if args.c != -1:
-				print("-------running chunksize test--------")
-				time = aesencrypt.AES_Enc_Parallel_chunksize(args, key)
-			elif args.encrypt:
-				time = aesencrypt.AES_Encrypt_Parallelized(args, key)
+
+		if args.p:   # PARALLEL RUNS
+			
+			if args.encrypt:   
+				if args.c != -1:
+					print("-------running Encrypt chunksize test--------")
+					time = aesencrypt.AES_Enc_Parallel_chunksize(args, key)
+				else:
+					time = aesencrypt.AES_Encrypt_Parallelized(args, key)    # Standard parallel encrypt
 			else:
-				time = aesdecrypt.AES_Decrypt_Parallelized(args, key)
-		else:
+				if args.c != -1:
+					print("-------Running Decrypt chunksize test--------")
+					time = aesdecrypt.AES_Dec_Parallel_chunksize(args, key)
+				else:
+					time = aesdecrypt.AES_Decrypt_Parallelized(args, key)
+
+		else:      # SEQUENTIAL RUNS
 			if args.encrypt:
 				time = aesencrypt.AES_Encrypt(args, key)
 			else:
