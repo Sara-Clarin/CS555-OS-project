@@ -139,11 +139,9 @@ if __name__ == '__main__':
 	tools.print_key_hex(pre_key)
 	key = tools.key_expansion(pre_key)
 
-	# TODO : All AES Encrypt/Decrypt should return back times
-	# TODO : Merge @sara's evaluation code to wrap time calculation
 	for _ in range(args.i):
 		if args.p:
-			if args.c:
+			if args.c != -1:
 				print("-------running chunksize test--------")
 				time = aesencrypt.AES_Enc_Parallel_chunksize(args, key)
 			elif args.encrypt:
@@ -173,12 +171,3 @@ if __name__ == '__main__':
 	logger.info(f'Variance: {statistics.variance(TIME_TRIALS)}')  # NOTE: REQUIRES > 1 ITERATIONS
 	logger.info(f'Coefficient of Variation: {Coefficient_of_Variation}')
 	logger.info("------------------------------------")
-
-	print("           AES Statistics           ")
-	print("------------------------------------")
-	print(f'Number of Trials: {len(TIME_TRIALS)}')
-	print(f'Time Splits: {TIME_TRIALS}')
-	print(f'Average Time: {sum(TIME_TRIALS) / len(TIME_TRIALS)}')
-	print(f'Variance: {statistics.variance(TIME_TRIALS)}')  # NOTE: REQUIRES > 1 ITERATIONS
-	print(f'Coefficient of Variation: {Coefficient_of_Variation}')
-	print("------------------------------------")

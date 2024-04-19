@@ -688,10 +688,13 @@ def AES_Encrypt_Parallelized(args, key):
         else:
             workers = MAX_WORKERS
 
-        #print(f'[INFO]: Max workers: {workers}\r')
+        print(f'[INFO]: Max workers: {workers}\r')
 
         # Loop to create parts
-        part_size = len(padded) // workers
+        split = 6500
+
+        #part_size = len(padded) // workers
+        part_size = len(padded) // split
 
         if (remainder := (part_size % 16)) != 0:  # take chunks that are multiples of 16
             part_size -= remainder
@@ -710,6 +713,9 @@ def AES_Encrypt_Parallelized(args, key):
         if remaining_blocks > 0:
             parts.append(padded[ind::])
         
+        print(f'Number of blocks fed to each process: {part_size / 16}')
+        print(f'Ways that we split the pool{split}')
+
         start = time.time_ns()
         # map(): Apply a function to an iterable of elements.
         with ProcessPoolExecutor(max_workers=workers) as executor:
@@ -739,14 +745,8 @@ def AES_Enc_Parallel_chunksize(args, key):
     Output :     None
     Description: Perform Parallelized AES Encryption
     """
-    #print("[INFO]: Parallelized Encryption")
     ciphertext = b''
     encrypted_blocks = []
-    futures = []
-    parts = []
-
-    print(f'Key in main func is: {key}')
-
 
     global MAX_WORKERS
     with open(args.inf, 'rb') as infile:
@@ -765,44 +765,31 @@ def AES_Enc_Parallel_chunksize(args, key):
         else:
             workers = MAX_WORKERS
 
-        #print(f'[INFO]: Max workers: {workers}\r')
+        # SET CHUNKSIZE (number of blocks per process at a time)
         chunkSize = args.c
 
-        # TODO: make a list of blocks, 16 bytes each
         blocks = []
-
-        # Loop to create blocks
         for x in range(num_blocks):
             block = padded[x*16: (x*16)+16]
             blocks.append(block)
 
-        print(f'Padded output:')
-        #print(blocks)
-
-
+        
         print(f'Chunksize: is {chunkSize} blocks per process')
         arguments = [(block, key) for block in blocks]
 
         start = time.time_ns()
         # map(): Apply a function to an iterable of elements.
         with ProcessPoolExecutor(max_workers=workers) as executor:
-           
-            for result in executor.map(encryptor, arguments ):
-                #print(result)
-                encrypted_blocks.append(result)
-                
-            #for future in futures: # try as_completed(result)
-                #encrypted_blocks.append(future)
-                #print(list(future))
+            for result in executor.map(encryptor, arguments, chunksize=chunkSize ):
+                encrypted_blocks.append(result) 
+            
 
         # Concatenate the encrypted blocks in the original order
         ciphertext = b''.join(encrypted_blocks)
         end = time.time_ns()
 
         total_time = (end - start) / 1e9
-        #print(f'[INFO]: Parallelized AES Encryption took {total_time} s')
         with open(args.outf, 'wb+') as outfile:
             outfile.write(ciphertext)
 
-        #print(f'Ciphertext: {ciphertext}')
         return total_time
