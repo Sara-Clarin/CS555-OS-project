@@ -40,6 +40,7 @@ def arg_checker(args):
 		logger.info(f'Generating File of size {args.g}\n')
 		print(f'Generating File of size {args.g}\n')
 		f_name = randfile.main_wrapper(int(args.g))
+
 		args.inf = f_name
 	else:
 		if args.inf:
@@ -77,14 +78,19 @@ def set_log(a):
 	dt_string = now.strftime("%m%d%Y_%H%M%S")
 	logger = logging.getLogger(__name__)
 
+	print(f'a.outf == {a.outf}')
+
 	# Create a log file in eval_files with MMDDYY_HHMMSS_outf.log
 	if "Win" in platform.system():
 		index = a.outf.rfind('/')
-		logging.basicConfig(filename=f'{a.outf}_{dt_string}.log', encoding='utf-8', level=logging.DEBUG)
+		logging.basicConfig(filename=f'eval_files\\{a.outf[index+1::]}_{dt_string}.log', encoding='utf-8', level=logging.DEBUG)
 	if "Darwin" in platform.system():
 		index = a.outf.rfind('/')
-		logging.basicConfig(filename=f'{a.outf}_{dt_string}.log', encoding='utf-8', level=logging.DEBUG)
+		logging.basicConfig(filename=f'eval_files/{a.outf[index+1:1]}_{dt_string}.log', encoding='utf-8', level=logging.DEBUG)
 
+	print("Logging to:")
+	print(f'eval_files/{a.outf[index+1::]}_{dt_string}.log')
+	print(" ")
 
 if __name__ == '__main__':
 	print("------------------------------------")
@@ -99,6 +105,10 @@ if __name__ == '__main__':
 	parser.add_argument('-k', action='store', help='[Optional] Key file, omit to generate key')
 	parser.add_argument('-w', type=int, default=-1, action='store', help='[Optional] Override MAX Workers')
 	parser.add_argument('-i', type=int, default=1, action='store', help='[Optional] Iterations. Default is 1')
+
+	parser.add_argument('-c', type=int, default=-1, action='store', help='[Optional] Override number of blocks per process')
+	parser.add_argument('-n', type=int, default=-1, action='store', help='[Optional] Suppress statistics (run as encryptor/decryptor only)')
+
 
 	# input file OR generate flags must be set first before defining output
 	gen = parser.add_mutually_exclusive_group(required=True)
@@ -129,15 +139,24 @@ if __name__ == '__main__':
 	tools.print_key_hex(pre_key)
 	key = tools.key_expansion(pre_key)
 
-	# TODO : All AES Encrypt/Decrypt should return back times
-	# TODO : Merge @sara's evaluation code to wrap time calculation
 	for _ in range(args.i):
-		if args.p:
-			if args.encrypt:
-				time = aesencrypt.AES_Encrypt_Parallelized(args, key)
+
+		if args.p:   # PARALLEL RUNS
+			
+			if args.encrypt:   
+				if args.c != -1:
+					print("-------running Encrypt chunksize test--------")
+					time = aesencrypt.AES_Enc_Parallel_chunksize(args, key)
+				else:
+					time = aesencrypt.AES_Encrypt_Parallelized(args, key)    # Standard parallel encrypt
 			else:
-				time = aesdecrypt.AES_Decrypt_Parallelized(args, key)
-		else:
+				if args.c != -1:
+					print("-------Running Decrypt chunksize test--------")
+					time = aesdecrypt.AES_Dec_Parallel_chunksize(args, key)
+				else:
+					time = aesdecrypt.AES_Decrypt_Parallelized(args, key)
+
+		else:      # SEQUENTIAL RUNS
 			if args.encrypt:
 				time = aesencrypt.AES_Encrypt(args, key)
 			else:
@@ -145,6 +164,9 @@ if __name__ == '__main__':
 
 		# Obtain times from individual runs
 		TIME_TRIALS.append(time)
+
+	if (args.n == 2):
+		exit(0)
 
 	Coefficient_of_Variation = cv(TIME_TRIALS)
 
