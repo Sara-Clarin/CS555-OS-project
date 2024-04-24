@@ -24,6 +24,7 @@ cv = lambda x: np.std(x, ddof=1) / np.mean(x) * 100
 logger: logging = None
 
 TIME_TRIALS = []
+TOTAL_BYTES = 0
 
 def arg_printer(args):
 	logger.info(args)
@@ -94,6 +95,7 @@ if __name__ == '__main__':
 	print(f'[OS]: {platform.system()}\r')
 	print(f'[Cores]: {os.cpu_count()}\r')
 
+
 	parser = argparse.ArgumentParser(prog='aestest.py', description='Perform AES-128 ECB Encryption / Decryption')
 	parser.add_argument('-p', action='store_true', help='[Optional] Enable parallelization flag')
 	parser.add_argument('-k', action='store', help='[Optional] Key file, omit to generate key')
@@ -134,17 +136,19 @@ if __name__ == '__main__':
 	for _ in range(args.i):
 		if args.p:
 			if args.encrypt:
-				time = aesencrypt.AES_Encrypt_Parallelized(args, key)
+				time, num_bytes = aesencrypt.AES_Encrypt_Parallelized(args, key)
 			else:
-				time = aesdecrypt.AES_Decrypt_Parallelized(args, key)
+				time, num_bytes = aesdecrypt.AES_Decrypt_Parallelized(args, key)
 		else:
 			if args.encrypt:
-				time = aesencrypt.AES_Encrypt(args, key)
+				time, num_bytes = aesencrypt.AES_Encrypt(args, key)
 			else:
-				time = aesdecrypt.AES_Decrypt(args, key)
+				time, num_bytes = aesdecrypt.AES_Decrypt(args, key)
 
 		# Obtain times from individual runs
 		TIME_TRIALS.append(time)
+
+		TOTAL_BYTES += num_bytes
 
 	Coefficient_of_Variation = cv(TIME_TRIALS)
 
@@ -154,6 +158,7 @@ if __name__ == '__main__':
 	logger.info(f'Number of Trials: {len(TIME_TRIALS)}')
 	logger.info(f'Time Splits: {TIME_TRIALS}')
 	logger.info(f'Average Time: {sum(TIME_TRIALS) / len(TIME_TRIALS)}')
+	logger.info(f'Average Throughput: {TOTAL_BYTES / sum(TIME_TRIALS)} Bytes/s')
 	logger.info(f'Variance: {statistics.variance(TIME_TRIALS)}')  # NOTE: REQUIRES > 1 ITERATIONS
 	logger.info(f'Coefficient of Variation: {Coefficient_of_Variation}')
 	logger.info("------------------------------------")

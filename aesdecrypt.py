@@ -679,7 +679,7 @@ def AES_Decrypt(args, key):
     with open(args.outf, 'wb') as outfile:
         outfile.write(unpadded)
 
-    return total_time
+    return total_time, len(unpadded)
 
 
 def AES_Decrypt_Parallelized(args, key):
@@ -752,4 +752,4 @@ def AES_Decrypt_Parallelized(args, key):
         with open(args.outf, 'wb') as outfile:
             outfile.write(plaintext)
 
-        return total_time
+        return total_time, len(plaintext)

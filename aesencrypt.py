@@ -654,7 +654,7 @@ def AES_Encrypt(args, key):
     with open(args.outf, 'wb') as outfile:
         outfile.write(ciphertext)
 
-    return total_time
+    return total_time, len(ciphertext)
 
 
 def AES_Encrypt_Parallelized(args, key):
@@ -725,4 +725,4 @@ def AES_Encrypt_Parallelized(args, key):
         with open(args.outf, 'wb') as outfile:
             outfile.write(ciphertext)
 
-        return total_time
+        return total_time, len(ciphertext)
